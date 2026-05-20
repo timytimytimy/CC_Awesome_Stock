@@ -20,6 +20,7 @@ from stock_data.market import (
     get_sector_performance,
     get_northbound_flow,
 )
+from stock_data.macro import classify_credit_cycle, market_temperature
 
 
 def parse_args():
@@ -29,19 +30,56 @@ def parse_args():
     return p.parse_args()
 
 
-def regime_judgment(indices: dict, limit_stats: dict, northbound: dict) -> str:
-    """简单规则判断大盘状态"""
+def regime_judgment(indices: dict, limit_stats: dict, northbound: dict,
+                    cycle: dict = None, temp: dict = None) -> str:
+    """
+    结合技术面 + 宏观面的大盘状态判断。
+    技术面：上证/沪深300 MA60 状态 + 涨停活跃度
+    宏观面：信用周期阶段 + 流动性温度
+    """
     sz300 = indices.get("sz300", {})
     above_ma60 = sz300.get("above_ma60")
     limit_count = limit_stats.get("limit_up_count") or 0
-    nb_flow = northbound.get("total_5d")
 
+    # 技术面初判
     if above_ma60 is True and limit_count >= 60:
-        return "A（明确上升趋势）"
+        tech_state = "A"
     elif above_ma60 is False and limit_count < 30:
-        return "C（下降趋势/高风险）"
+        tech_state = "C"
     else:
-        return "B（震荡/分化）"
+        tech_state = "B"
+
+    # 宏观面修正
+    notes = []
+    if cycle:
+        phase = cycle.get("phase", "")
+        if "衰退" in phase:
+            notes.append("宏观衰退期 → 警惕系统性风险")
+            if tech_state == "A":
+                tech_state = "B"  # 技术面强但宏观差，降级
+        elif "复苏" in phase:
+            notes.append("宏观复苏期 → 有利成长股")
+        elif "过热" in phase:
+            notes.append("宏观过热期 → 周期股占优、警惕收紧")
+        elif "滞胀" in phase:
+            notes.append("宏观滞胀期 → 防御为主")
+
+    if temp:
+        rating = temp.get("rating", "")
+        if "极冷" in rating and tech_state == "A":
+            notes.append("流动性极冷但技术面强 → 警惕假突破")
+            tech_state = "B"
+
+    state_map = {
+        "A": "A（明确上升趋势）",
+        "B": "B（震荡/分化）",
+        "C": "C（下降趋势/高风险）",
+        "D": "D（恐慌/极端低估）",
+    }
+    label = state_map.get(tech_state, "B（震荡/分化）")
+    if notes:
+        label += " | " + "；".join(notes)
+    return label
 
 
 def main():
@@ -49,6 +87,26 @@ def main():
     as_of = args.as_of or date.today().strftime("%Y-%m-%d")
 
     print(f"# 大盘快照 (as of {as_of})\n", flush=True)
+
+    # 0. 宏观背景（信用周期 + 温度计）── 必须放最前面
+    print("## 宏观背景（信用周期 + 流动性温度）\n")
+    try:
+        cycle = classify_credit_cycle()
+        temp = market_temperature()
+        print(f"- **信用周期**: {cycle.get('phase', 'unknown')}")
+        print(f"  - PMI={cycle.get('pmi')} ({cycle.get('pmi_trend')}) | "
+              f"PPI={cycle.get('ppi_yoy', 0):+.2f}% ({cycle.get('ppi_trend')}) | "
+              f"信贷脉冲={cycle.get('credit_pulse')} ({cycle.get('credit_pulse_trend')})")
+        print(f"  - 策略含义: {cycle.get('strategy_implication')}")
+        print(f"- **市场温度**: {temp.get('rating', 'unknown')} (评分 {temp.get('temp_score', 'N/A')}/100)")
+        print(f"  - 10Y国债 {temp.get('cn_10y')}% (近1年分位 {temp.get('cn_10y_1y_percentile')}%) | "
+              f"10Y-2Y利差 {temp.get('cn_10y_2y_spread')}% | "
+              f"中美10Y利差 {temp.get('cn_us_10y_spread')}%")
+        print(f"  - 利差解读: {temp.get('interpretation', '')}")
+        print(f"- > 完整宏观面板见: `python scripts/snapshot_macro.py`")
+    except Exception as e:
+        print(f"- [宏观数据降级] ⚠️ {e}")
+    print()
 
     # 1. 指数
     print("## 主要指数\n")
@@ -103,11 +161,17 @@ def main():
 
     # 5. 综合判断
     print("## 大盘状态判断\n")
-    regime = regime_judgment(indices, limit_stats, northbound)
+    try:
+        cycle_for_regime = classify_credit_cycle()
+        temp_for_regime = market_temperature()
+    except Exception:
+        cycle_for_regime, temp_for_regime = None, None
+    regime = regime_judgment(indices, limit_stats, northbound, cycle_for_regime, temp_for_regime)
     print(f"- **当前状态**: {regime}")
     print(f"- **数据时间**: {as_of}")
     print()
-    print("> [推断] 以上判断基于简单规则。请参考 kb/playbooks/market-regime.md 做人工复核。")
+    print("> [推断] 以上判断综合技术面（MA60、涨停活跃度）+ 宏观面（信用周期、流动性温度）。"
+          "完整宏观分析请运行 `python scripts/snapshot_macro.py`。")
 
 
 if __name__ == "__main__":

@@ -27,15 +27,19 @@ echo "[$DATE] 开始全市场选股分析..." >&2
     -p "使用 a-stock-analyst skill 进行今日全市场选股分析。
 要求：
 1. 按完整五阶段流程运行（阶段0到阶段5）
-2. 调用 data/scripts/snapshot_market.py 获取大盘数据
-3. 调用 data/scripts/screen_sectors.py --top 10 获取行业数据
-4. 基于主线从 industry-mapping.yaml 找候选公司
-5. 对每只候选股调用 data/scripts/snapshot_stock.py
-6. 对每只候选股调用 data/scripts/find_similar_cases.py
-7. 严格按 A/B/C/D/E 五段格式输出完整报告
-8. 每个判断必须标注 [事实/推断/假设/情绪/传闻]
-9. 报告开头写：# 周报 $DATE
-10. 最多选出 6 只候选股进入 C 段
+2. **【强制】阶段 1 必须先跑 data/scripts/snapshot_macro.py 拿宏观面板**
+   - 必须在报告 A 段引用：信用周期阶段（高善文框架）+ 市场温度评级（Howard Marks 框架）
+   - 必须列出 PMI / PPI / 信贷脉冲 / 中美10Y利差 等核心数据
+3. 调用 data/scripts/snapshot_market.py 获取大盘技术面数据
+4. 调用 data/scripts/screen_sectors.py --top 10 获取行业数据
+5. 基于主线 + 宏观周期阶段（如过热期偏周期，复苏期偏成长）从 industry-mapping.yaml 找候选公司
+6. 对每只候选股调用 data/scripts/snapshot_stock.py
+7. 对每只候选股调用 data/scripts/find_similar_cases.py
+8. 严格按 A/B/C/D/E 五段格式输出完整报告
+9. 每个判断必须标注 [事实/推断/假设/情绪/传闻]
+10. 报告开头写：# 周报 $DATE
+11. 最多选出 6 只候选股进入 C 段
+12. **【强制】若宏观信用周期=衰退或市场温度=极冷，最高只能给 B 档候选，禁止 A 档**
 
 【重要】搜索要求——以下搜索步骤不可省略：
 - 阶段1完成后：用 WebSearch 搜索今日大盘涨跌的具体催化剂，例如搜索：
