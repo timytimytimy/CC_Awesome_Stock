@@ -1,0 +1,115 @@
+# 申万一级行业 → 代表公司 → 主要题材映射
+# 代码格式: ticker.exchange (SH=上交所, SZ=深交所)
+industries:
+  - sw_code: "801080"
+    name_zh: 电子
+    themes: [ai-infrastructure, semiconductor]
+    sub_industries:
+      - name: 半导体
+        themes: [semiconductor]
+        leaders: ["688041.SH", "688012.SH", "002049.SZ"]
+      - name: 光模块/光器件
+        themes: [ai-infrastructure]
+        leaders: ["300308.SZ", "300454.SZ"]
+      - name: 消费电子
+        themes: []
+        leaders: ["002475.SZ", "603501.SH"]
+
+  - sw_code: "801140"
+    name_zh: 汽车
+    themes: [new-energy-vehicle]
+    sub_industries:
+      - name: 乘用车
+        themes: [new-energy-vehicle]
+        leaders: ["002594.SZ", "601127.SH", "600104.SH"]
+      - name: 汽车零部件
+        themes: [new-energy-vehicle]
+        leaders: ["601799.SH", "300750.SZ"]
+
+  - sw_code: "801050"
+    name_zh: 有色金属
+    themes: [new-energy-vehicle, semiconductor]
+    sub_industries:
+      - name: 锂
+        themes: [new-energy-vehicle]
+        leaders: ["002466.SZ", "002460.SZ"]
+      - name: 铜
+        themes: [ai-infrastructure]
+        leaders: ["600362.SH", "000630.SZ"]
+
+  - sw_code: "801760"
+    name_zh: 传媒
+    themes: [ai-application]
+    sub_industries:
+      - name: 游戏
+        themes: [ai-application]
+        leaders: ["002602.SZ", "300418.SZ"]
+      - name: 影视
+        themes: []
+        leaders: ["300251.SZ"]
+
+  - sw_code: "801750"
+    name_zh: 计算机
+    themes: [ai-application, ai-infrastructure]
+    sub_industries:
+      - name: 云计算/SaaS
+        themes: [ai-application]
+        leaders: ["600570.SH", "300033.SZ"]
+      - name: 信创
+        themes: [semiconductor]
+        leaders: ["688041.SH", "002405.SZ"]
+
+  - sw_code: "801080.1"
+    name_zh: 通信
+    themes: [ai-infrastructure]
+    sub_industries:
+      - name: 通信设备
+        themes: [ai-infrastructure]
+        leaders: ["000063.SZ", "300308.SZ"]
+      - name: 运营商
+        themes: []
+        leaders: ["600050.SH", "601728.SH"]
+
+  - sw_code: "801150"
+    name_zh: 医药生物
+    themes: [pharma-biotech]
+    sub_industries:
+      - name: 创新药
+        themes: [pharma-biotech]
+        leaders: ["600196.SH", "688363.SH"]
+      - name: CXO
+        themes: [pharma-biotech]
+        leaders: ["603259.SH", "300347.SZ"]
+      - name: 医疗器械
+        themes: [pharma-biotech]
+        leaders: ["300760.SZ", "688271.SH"]
+
+  - sw_code: "801120"
+    name_zh: 食品饮料
+    themes: [consumer-recovery]
+    sub_industries:
+      - name: 白酒
+        themes: [consumer-recovery]
+        leaders: ["600519.SH", "000858.SZ", "600809.SH"]
+      - name: 调味品
+        themes: [consumer-recovery]
+        leaders: ["603288.SH", "002507.SZ"]
+
+  - sw_code: "801880"
+    name_zh: 国防军工
+    themes: [military, low-altitude-economy]
+    sub_industries:
+      - name: 航空装备
+        themes: [military]
+        leaders: ["600760.SH", "000768.SZ"]
+      - name: 无人机
+        themes: [low-altitude-economy]
+        leaders: ["002190.SZ", "300525.SZ"]
+
+  - sw_code: "801010"
+    name_zh: 农林牧渔
+    themes: []
+    sub_industries:
+      - name: 养猪
+        themes: []
+        leaders: ["002714.SZ", "001201.SZ"]

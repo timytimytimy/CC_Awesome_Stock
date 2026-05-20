@@ -1,0 +1,106 @@
+schools:
+  - slug: main-line-capital
+    name_zh: 主线资金派
+    core_belief: A股短期由资金主线驱动，跟对主线、吃赚钱效应是核心目标
+    key_questions:
+      - 当前市场的钱在往哪里去？
+      - 哪个板块在连续涨停，连板高度还在扩张吗？
+      - 主力情绪周期处于哪个阶段（探底/共识/高潮/衰减）？
+    typical_metrics:
+      - 涨停数量（全市场）
+      - 连板高度（最高几连板）
+      - 封板率
+      - 板块成交额占比
+      - 北上/南下净流入
+      - 换手率结构
+    opposing: [long-value, fundamental]
+    representative_authors: [游资代表]
+    notes: 方法论可迁移性差，高度依赖盘感和实时数据，适合波段，中线使用需谨慎
+
+  - slug: industry-trend
+    name_zh: 产业趋势派
+    core_belief: 政策、产业周期、技术变革是定价主因，找到景气上行早期的行业
+    key_questions:
+      - 哪些行业处于政策加持 + 景气上行的共振期？
+      - 产业链中谁最先受益（上游材料/中游设备/下游品牌）？
+      - 行业渗透率在哪里？（0-10% 和 50-90% 的赔率完全不同）
+    typical_metrics:
+      - 行业景气指数（PMI/订单/库存）
+      - 政策密度（单位时间政策条数）
+      - 产业链价格变化（上下游利润分配）
+      - 渗透率（月度/季度）
+    opposing: [main-line-capital]
+    representative_authors: [任泽平, 高善文]
+    notes: 擅长找早期逻辑，但催化剂落地时间难判，需配合资金信号确认买点
+
+  - slug: fundamental
+    name_zh: 基本面财报派
+    core_belief: 长期股价由盈利质量决定，只买得清楚的公司
+    key_questions:
+      - ROE 是否持续 >20%、靠什么驱动（利润率/周转/杠杆）？
+      - 自由现金流是否为正？和净利润的背离是否可解释？
+      - 护城河来自什么（品牌/成本/网络效应/专利/规模）？
+      - 当前估值是否在历史合理区间？
+    typical_metrics:
+      - ROE（连续5年）
+      - 净利率
+      - FCF/净利润
+      - 应收账款周转天数
+      - 资产负债率
+      - PB / PE 历史分位
+    opposing: [main-line-capital]
+    representative_authors: [唐朝, 邱国鹭, 张坤, 姜诚]
+    notes: 选股质量高，但估值容忍度不同作者差异大，买入时机往往偏早
+
+  - slug: trend-growth
+    name_zh: 趋势成长派
+    core_belief: 股价趋势本身是信息，强者恒强，买基本面好且价格创新高的股票
+    key_questions:
+      - 当前季度EPS是否加速增长（>25% YoY）？
+      - 股价是否在适当整理后突破关键阻力位？
+      - 机构是否在净买入？
+      - 相对强度（RPS）排名是否在前20%？
+    typical_metrics:
+      - EPS增速（当季 vs 上季）
+      - 销售收入增速
+      - 突破时成交量（需 >50-day avg 的1.5x）
+      - RS Rating（相对强度）
+      - 机构持仓变化
+    opposing: [contrarian]
+    representative_authors: [William O'Neil, Mark Minervini, 朱少醒]
+    notes: CANSLIM 体系完整，最适合中线；A股流动性差异使得个别指标需要调整
+
+  - slug: long-value
+    name_zh: 长期价值派
+    core_belief: 以合理价格买入优秀企业，长期持有，让复利完成工作
+    key_questions:
+      - 商业模式是否有护城河（可持续竞争优势）？
+      - 管理层是否诚实、有能力、以股东利益为先？
+      - 未来5-10年的确定性有多高？
+      - 当前价格相对于内在价值是否有安全边际？
+    typical_metrics:
+      - ROE（长期可持续性）
+      - ROIC vs WACC
+      - 自由现金流折现（DCF框架）
+      - 分红历史
+      - 股东权益增长
+    opposing: [main-line-capital, trend-growth]
+    representative_authors: [林园, 段永平, 巴菲特, 芒格, 唐朝, 但斌]
+    notes: 长期收益最可期，但需要极高容忍度，不适合以"价格短期表现"衡量策略
+
+  - slug: contrarian
+    name_zh: 逆向赔率派
+    core_belief: 超额收益来自市场的系统性误解，在低预期高赔率处布局
+    key_questions:
+      - 当前股价隐含了什么悲观预期？这个预期合理吗？
+      - 如果最坏情景发生，下行空间有多大？
+      - 如果修复，赔率（潜在收益/潜在损失）是否足够高（>3:1）？
+      - 市场为什么在卖？卖出理由是否站得住脚？
+    typical_metrics:
+      - 价格相对于历史低点的折扣
+      - PB 相对于历史最低的分位
+      - 悲观预期隐含的增长率
+      - 困境解除的概念催化剂
+    opposing: [trend-growth, main-line-capital]
+    representative_authors: [冯柳, 董宝珍, Howard Marks, 邱国鹭]
+    notes: 需要极强的独立判断力，容易"接刀"，需严格区分"便宜"和"低质量"

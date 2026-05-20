@@ -1,0 +1,107 @@
+themes:
+  - slug: ai-infrastructure
+    name_zh: AI 算力与基础设施
+    industries: [电子, 通信, 计算机]
+    supply_chain:
+      upstream: [GPU芯片, HBM内存, 光模块, 液冷散热]
+      midstream: [服务器, 交换机, IDC数据中心]
+      downstream: [云计算, AI应用, 大模型厂商]
+    typical_stocks: ["300308.SZ", "300454.SZ", "002049.SZ"]
+    lifecycle: growth
+    heat_signal: 连续涨停>5天且估值PE>100x
+    policy_sensitivity: high
+    notes: 受算力需求和美国出口管制双重影响
+
+  - slug: ai-application
+    name_zh: AI 应用软件
+    industries: [计算机, 传媒]
+    supply_chain:
+      upstream: [大模型API, 云计算]
+      midstream: [AI SaaS, 具身智能]
+      downstream: [垂直行业客户]
+    typical_stocks: ["600570.SH", "300033.SZ"]
+    lifecycle: early-growth
+    heat_signal: 无实质收入但市值翻倍
+    policy_sensitivity: medium
+
+  - slug: semiconductor
+    name_zh: 半导体自主可控
+    industries: [电子]
+    supply_chain:
+      upstream: [硅片, 特气, 靶材, 光刻胶]
+      midstream: [设备, EDA, IP]
+      downstream: [Fabless设计, Foundry, 封测]
+    typical_stocks: ["688041.SH", "688012.SH", "603986.SH"]
+    lifecycle: growth
+    heat_signal: 国产化率炒作叠加PB>10x
+    policy_sensitivity: very-high
+
+  - slug: new-energy-vehicle
+    name_zh: 新能源汽车
+    industries: [汽车, 电力设备, 有色]
+    supply_chain:
+      upstream: [锂/钴/镍, 正负极材料, 电解液, 隔膜]
+      midstream: [电池(CATL体系), 电机电控, BMS]
+      downstream: [整车厂, 充电桩, 换电]
+    typical_stocks: ["300750.SZ", "002594.SZ", "601127.SH"]
+    lifecycle: mature
+    heat_signal: 渗透率已超50%，主题炒作意义大于业绩驱动
+    policy_sensitivity: medium
+
+  - slug: low-altitude-economy
+    name_zh: 低空经济
+    industries: [航空航天, 国防]
+    supply_chain:
+      upstream: [飞控系统, 电机, 电池]
+      midstream: [无人机整机, eVTOL]
+      downstream: [物流配送, 城市出行, 农业植保]
+    lifecycle: early-growth
+    heat_signal: 政策出台即炒
+    policy_sensitivity: very-high
+
+  - slug: consumer-recovery
+    name_zh: 消费复苏
+    industries: [食品饮料, 商贸零售, 休闲服务]
+    supply_chain:
+      upstream: [原材料农产品]
+      midstream: [品牌商, 渠道商]
+      downstream: [终端消费者]
+    typical_stocks: ["600519.SH", "000858.SZ", "600809.SH"]
+    lifecycle: cyclical
+    heat_signal: 消费数据连续3月改善后市场已定价
+    policy_sensitivity: medium
+
+  - slug: pharma-biotech
+    name_zh: 医药生物
+    industries: [医药生物]
+    supply_chain:
+      upstream: [原料药, CXO]
+      midstream: [创新药, 仿制药, 医疗器械]
+      downstream: [医院, DTP药房]
+    typical_stocks: ["600196.SH", "603259.SH", "300760.SZ"]
+    lifecycle: mixed
+    heat_signal: 创新药临床数据炒作泡沫
+    policy_sensitivity: very-high
+    notes: 受集采、医保谈判、FDA/NMPA审批影响大
+
+  - slug: state-owned-reform
+    name_zh: 国企改革/中特估
+    industries: [银行, 建筑, 石化, 公用事业]
+    supply_chain: {}
+    lifecycle: cyclical
+    heat_signal: 政治会议密集期炒作后快速降温
+    policy_sensitivity: very-high
+    notes: 估值修复逻辑，需关注分红率提升和ROE改善是否真实落地
+
+  - slug: military
+    name_zh: 军工
+    industries: [国防军工]
+    supply_chain:
+      upstream: [钛合金, 碳纤维, 特种芯片]
+      midstream: [航空发动机, 导弹, 雷达]
+      downstream: [整机(歼-20, 运-20等)]
+    typical_stocks: ["600760.SH", "002190.SZ"]
+    lifecycle: growth
+    heat_signal: 地缘冲突事件炒作
+    policy_sensitivity: very-high
+    notes: 信息极度不透明，基本面分析难度大，多依赖政策和订单推断
