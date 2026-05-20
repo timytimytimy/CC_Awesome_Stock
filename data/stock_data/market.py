@@ -78,28 +78,36 @@ def get_limit_up_stats(as_of: Optional[str] = None) -> dict:
 
 def get_sector_performance(top_n: int = 10, period_days: int = 5) -> pd.DataFrame:
     """
-    申万一级行业近 N 日涨跌幅排名。
-    返回 DataFrame，列：industry, change_pct_N, volume_change_ratio, pe_percentile
+    同花顺行业板块今日涨跌幅排名（含净流入、领涨股）。
+    数据源：同花顺（非东方财富，稳定可用）。
+    返回 DataFrame，列：industry, change_pct, net_inflow, volume, leader_stock, leader_pct
+    period_days 参数保留接口兼容，实际返回今日数据。
     """
     import akshare as ak
     try:
-        df = ak.stock_board_industry_name_em()
+        df = ak.stock_board_industry_summary_ths()
         if df is None or df.empty:
             return pd.DataFrame()
-        # 取涨跌幅并排序
         df = df.rename(columns={
-            "板块名称": "industry",
-            "涨跌幅": "change_pct",
-            "成交额": "volume",
+            "板块":     "industry",
+            "涨跌幅":   "change_pct",
+            "总成交额": "volume",
+            "净流入":   "net_inflow",
+            "领涨股":   "leader_stock",
+            "领涨股-涨跌幅": "leader_pct",
+            "上涨家数": "up_count",
+            "下跌家数": "down_count",
         })
-        numeric_cols = ["change_pct", "volume"]
-        for c in numeric_cols:
+        for c in ["change_pct", "volume", "net_inflow", "leader_pct"]:
             if c in df.columns:
                 df[c] = pd.to_numeric(df[c], errors="coerce")
         df = df.sort_values("change_pct", ascending=False)
-        return df.head(top_n)[["industry", "change_pct", "volume"]].reset_index(drop=True)
+        cols = [c for c in ["industry", "change_pct", "net_inflow", "volume",
+                             "leader_stock", "leader_pct", "up_count", "down_count"]
+                if c in df.columns]
+        return df.head(top_n)[cols].reset_index(drop=True)
     except Exception as e:
-        print(f"[WARN] sector_performance: {e}", file=sys.stderr)
+        print(f"[WARN] sector_performance (ths): {e}", file=sys.stderr)
         return pd.DataFrame()
 
 

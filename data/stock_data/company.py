@@ -8,25 +8,37 @@ import pandas as pd
 
 def get_kline(ticker: str, period: int = 120, as_of: Optional[str] = None) -> pd.DataFrame:
     """
-    获取 K 线数据（日线）。
+    获取 K 线数据（日线，前复权）。
     ticker: 600519.SH 或 000858.SZ 格式
     period: 获取近 N 个交易日
+    数据源：新浪财经（非东方财富，稳定可用）
     """
     import akshare as ak
-    symbol = _normalize_ticker(ticker)
+    code = _normalize_ticker(ticker)
+    # 新浪接口需要 sh/sz 前缀
+    suffix = ticker.split(".")[-1].lower() if "." in ticker else ""
+    if suffix == "sh" or code.startswith("6"):
+        symbol = f"sh{code}"
+    else:
+        symbol = f"sz{code}"
     try:
-        df = ak.stock_zh_a_hist(symbol=symbol, period="daily", adjust="qfq")
+        df = ak.stock_zh_a_daily(symbol=symbol, adjust="hfq")
         if df is None or df.empty:
             return pd.DataFrame()
-        df["日期"] = pd.to_datetime(df["日期"])
+        df["date"] = pd.to_datetime(df["date"])
         if as_of:
-            df = df[df["日期"] <= pd.to_datetime(as_of)]
-        df = df.sort_values("日期").tail(period)
-        df["ma20"] = df["收盘"].rolling(20).mean()
-        df["ma60"] = df["收盘"].rolling(60).mean()
+            df = df[df["date"] <= pd.to_datetime(as_of)]
+        df = df.sort_values("date").tail(period)
+        df["ma20"] = df["close"].rolling(20).mean()
+        df["ma60"] = df["close"].rolling(60).mean()
+        # 统一列名为中文（兼容下游脚本）
+        df = df.rename(columns={
+            "date": "日期", "open": "开盘", "high": "最高",
+            "low": "最低", "close": "收盘", "volume": "成交量",
+        })
         return df.reset_index(drop=True)
     except Exception as e:
-        print(f"[WARN] kline {ticker}: {e}", file=sys.stderr)
+        print(f"[WARN] kline {ticker} (sina): {e}", file=sys.stderr)
         return pd.DataFrame()
 
 

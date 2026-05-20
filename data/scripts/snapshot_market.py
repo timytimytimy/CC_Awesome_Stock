@@ -91,11 +91,14 @@ def main():
     if sector_df.empty:
         print("- [数据获取失败] ⚠️ 降级\n")
     else:
-        print("| 行业 | 涨跌幅(%) | 成交额(亿) |")
-        print("|---|---|---|")
+        print("| 行业 | 涨跌幅(%) | 净流入(亿) | 成交额(亿) | 领涨股 |")
+        print("|---|---|---|---|---|")
         for _, row in sector_df.iterrows():
-            vol = f"{row.get('volume', 0)/1e8:.1f}" if row.get('volume') else "N/A"
-            print(f"| {row.get('industry', '')} | {row.get('change_pct', '')} | {vol} |")
+            vol = f"{row.get('volume', 0):.1f}" if row.get('volume') else "N/A"
+            net = f"{row.get('net_inflow', 0):.2f}" if row.get('net_inflow') is not None else "N/A"
+            leader = row.get('leader_stock', '') or ''
+            leader_pct = f"+{row.get('leader_pct',0):.1f}%" if row.get('leader_pct') else ''
+            print(f"| {row.get('industry', '')} | {row.get('change_pct', '')} | {net} | {vol} | {leader} {leader_pct} |")
         print()
 
     # 5. 综合判断
