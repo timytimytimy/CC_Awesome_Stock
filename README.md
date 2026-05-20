@@ -5,7 +5,7 @@
 ## 系统构成
 
 ```
-知识库 (kb/)  +  数据层 (data/)  →  Skill (.claude/skills/a-stock-analyst/)
+知识库 (kb/)  +  数据层 (data/)  →  Skill (.claude/skills/a-stock-analyst/ 和 .agents/skills/a-stock-analyst/)
 ```
 
 - **kb/**：蒸馏自多位优秀分析者的方法论知识库（schools/authors/playbooks/taxonomy）
@@ -14,6 +14,7 @@
 - **journal/**：你自己的交易复盘（权重最高）
 - **backtest/**：量化回测
 - **.claude/skills/a-stock-analyst/**：Claude Code skill，五阶段决策辅助
+- **.agents/skills/a-stock-analyst/**：Codex/Agents skill，和 Claude 入口保持同一套分析规则
 
 ## 快速使用
 
@@ -93,7 +94,7 @@ cp journal/_template.md journal/trades/YYYY-MM-DD-TICKER.md
 2. 每个判断必须标 [事实/推断/假设/情绪/传闻]
 3. 不输出无依据的荐股
 4. 散户实践者观点只能用于执行适配和替代方案比较，不作为单股背书
-5. 所有输出仅作研究辅助，不构成投资建议
+5. 输出足够可执行的信号建议：能不能动、怎么动、仓位上限、触发条件和退出条件；最终执行由用户自行判断
 
 ## 数据来源
 

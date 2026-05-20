@@ -36,21 +36,21 @@
 
 ## P3: 文档与仓库卫生
 
-- [ ] 更新 `README.md` 的 MVP 状态。
+- [x] 更新 `README.md` 的 MVP 状态。
   - 现状：README 写作者档案 3 个，但 `kb/authors/_index.md` 已列 11 人。
-  - 期望：README 与当前知识库状态一致。
+  - 结果：README 已更新为作者档案 11 个、散户实践者档案 10 个，并补充 `.agents/skills/a-stock-analyst/` 入口说明。
 
-- [ ] 决定是否提交 `.agents/skills/a-stock-analyst/`。
+- [x] 决定是否提交 `.agents/skills/a-stock-analyst/`。
   - 现状：`.agents/` 未跟踪，内容与 `.claude/skills/a-stock-analyst/` 一致。
-  - 期望：如果是 Codex/Agents 入口，就纳入版本管理并在 README 说明；如果不是，就加入忽略规则。
+  - 结果：已纳入版本管理，作为 Codex/Agents 入口。
 
-- [ ] 调整报告产物的忽略规则。
+- [x] 调整报告产物的忽略规则。
   - 现状：`reports/*.md` 被忽略，但 `reports/*.pdf` 没被忽略。
-  - 期望：明确报告产物是否进 git；若不提交，补充 `reports/*.pdf`。
+  - 结果：`.gitignore` 已补充 `reports/*.pdf`，报告产物默认不进 git。
 
-- [ ] 清理 `.DS_Store` 和编译缓存。
+- [x] 清理 `.DS_Store` 和编译缓存。
   - 现状：`.DS_Store` 未跟踪，`__pycache__/` 已被忽略但本地存在。
-  - 期望：`.DS_Store` 加入 `.gitignore`，缓存不进入版本管理。
+  - 结果：`.DS_Store` 已加入 `.gitignore`，缓存继续不进入版本管理。
 
 ## P4: 报告质量护栏
 
