@@ -31,8 +31,12 @@ echo "[$DATE] 开始全市场选股分析..." >&2
    - 必须在报告 A 段引用：信用周期阶段（高善文框架）+ 市场温度评级（Howard Marks 框架）
    - 必须列出 PMI / PPI / 信贷脉冲 / 中美10Y利差 等核心数据
 3. 调用 data/scripts/snapshot_market.py 获取大盘技术面数据
-4. 调用 data/scripts/screen_sectors.py --top 10 获取行业数据
-5. 基于主线 + 宏观周期阶段（如过热期偏周期，复苏期偏成长）从 industry-mapping.yaml 找候选公司
+4. **【强制】阶段 2 必须先跑 data/scripts/snapshot_industry.py --top 15 拿行业基本面**
+   - 必须在报告 B 段标注每个候选行业的"位置标签"（低估改善/高位过热/价值陷阱风险）
+   - 必须列出价格分位（近3年）+ PE-TTM + 3月动量
+   - 高位过热行业必须列入"已过热方向"，不得作为主线推荐
+5. 调用 data/scripts/screen_sectors.py --top 10 获取当日资金/涨跌（次级证据）
+6. 基于主线 + 宏观周期阶段（如过热期偏周期，复苏期偏成长）+ 行业位置（低估改善优先）从 industry-mapping.yaml 找候选公司
 6. 对每只候选股调用 data/scripts/snapshot_stock.py
 7. 对每只候选股调用 data/scripts/find_similar_cases.py
 8. 严格按 A/B/C/D/E 五段格式输出完整报告

@@ -19,12 +19,14 @@
 - [x] 集成到阶段 1 市场判断：`snapshot_market.py` 顶部已嵌入宏观摘要。
 - [x] skill 强制约束：禁止跳过宏观分析；衰退/极冷状态禁 A 档。
 
-### P0.2 行业基本面流水线
+### P0.2 行业基本面流水线 ✅ 已完成
 
-- [ ] 建 `data/stock_data/industry.py`：行业 PE/PB 历史分位、ROE/毛利率/净利率趋势。
-- [ ] 行业 CR5/CR10 演变（按市值聚合计算）。
-- [ ] 自动识别"行业景气改善 vs 恶化"（参考 `kb/authors/qiu-guolu.md` 框架）。
-- [ ] 集成到阶段 2 主线筛选：当前只看"今日 ETF 涨跌"，必须加入"行业基本面位置"。
+- [x] 建 `data/stock_data/industry.py`：申万一级 PE/PB/股息率、同花顺行业指数 3 年 K 线、价格历史分位。
+- [x] 建 `data/scripts/snapshot_industry.py`：行业体检快照（全行业估值地图 + 重点行业位置评估）。
+- [x] 实现"邱国鹭框架"分类：低估改善 / 低估恶化（价值陷阱）/ 高位过热 / 高位回调 / 中位平稳。
+- [x] 集成到阶段 2 主线筛选：decision-tree 强制 `snapshot_industry.py` 优先于 `screen_sectors.py`。
+- [x] skill 新约束 22/23：禁止跳过行业基本面；高位过热行业禁 A/B 档。
+- [ ] （后续 P0.2+）行业 CR5/CR10 演变、ROE/毛利率聚合（需更细粒度数据）。
 
 ### P0.3 公司深度财报分析
 
