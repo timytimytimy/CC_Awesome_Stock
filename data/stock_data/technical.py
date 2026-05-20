@@ -12,23 +12,72 @@ def compute_rps(ticker: str, benchmark: str = "000300.SH",
     periods 默认对应约 3/6/9/12 个月交易日。
     """
     from stock_data.company import get_kline
-    from stock_data.market import get_index_snapshot
-    import sys
 
     df = get_kline(ticker, period=max(periods) + 10)
     if df.empty:
         return {"ticker": ticker, "rps": None, "error": "no kline"}
 
-    result = {"ticker": ticker, "rps_scores": {}}
+    benchmark_df = _get_benchmark_kline(benchmark, period=max(periods) + 10)
+    benchmark_error = benchmark_df.empty
+
+    result = {
+        "ticker": ticker,
+        "benchmark": benchmark,
+        "rps_scores": {},
+        "stock_returns": {},
+        "benchmark_returns": {},
+    }
+    if benchmark_error:
+        result["benchmark_error"] = "no benchmark kline"
+
     for p in periods:
         if len(df) < p:
             continue
         start_price = float(df.iloc[-p]["收盘"])
         end_price = float(df.iloc[-1]["收盘"])
         stock_return = (end_price - start_price) / start_price
-        result["rps_scores"][f"{p}d"] = round(stock_return * 100, 2)
+
+        benchmark_return = None
+        if not benchmark_error and len(benchmark_df) >= p:
+            benchmark_start = float(benchmark_df.iloc[-p]["收盘"])
+            benchmark_end = float(benchmark_df.iloc[-1]["收盘"])
+            benchmark_return = (benchmark_end - benchmark_start) / benchmark_start
+
+        key = f"{p}d"
+        result["stock_returns"][key] = round(stock_return * 100, 2)
+        if benchmark_return is None:
+            result["rps_scores"][key] = round(stock_return * 100, 2)
+        else:
+            result["benchmark_returns"][key] = round(benchmark_return * 100, 2)
+            result["rps_scores"][key] = round((stock_return - benchmark_return) * 100, 2)
 
     return result
+
+
+def _get_benchmark_kline(benchmark: str, period: int) -> pd.DataFrame:
+    import akshare as ak
+    import sys
+
+    symbol = _to_index_symbol(benchmark)
+    try:
+        df = ak.stock_zh_index_daily(symbol=symbol)
+        if df is None or df.empty:
+            return pd.DataFrame()
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date").tail(period)
+        df = df.rename(columns={"date": "日期", "close": "收盘"})
+        return df.reset_index(drop=True)
+    except Exception as e:
+        print(f"[WARN] benchmark {benchmark}: {e}", file=sys.stderr)
+        return pd.DataFrame()
+
+
+def _to_index_symbol(benchmark: str) -> str:
+    code = benchmark.split(".")[0]
+    suffix = benchmark.split(".")[-1].lower() if "." in benchmark else ""
+    if suffix == "sh" or code.startswith("0"):
+        return f"sh{code}"
+    return f"sz{code}"
 
 
 def get_technical_position(ticker: str) -> dict:

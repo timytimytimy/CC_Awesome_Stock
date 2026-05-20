@@ -87,8 +87,8 @@ def main():
         print("- 暂无公告数据\n")
     else:
         for a in announcements:
-            title = str(list(a.values())[1]) if len(a) > 1 else str(a)
-            date_val = str(list(a.values())[0]) if a else ""
+            title = a.get("公告标题") or a.get("标题") or str(a)
+            date_val = a.get("公告日期") or a.get("公告时间") or ""
             print(f"- [{date_val}] {title}")
         print()
 
@@ -99,8 +99,12 @@ def main():
         print("- 暂无新闻数据\n")
     else:
         for n in news[:5]:
-            vals = list(n.values())
-            print(f"- {vals[0] if vals else n}")
+            title = n.get("新闻标题") or n.get("标题") or str(n)
+            published_at = n.get("发布时间") or n.get("时间") or ""
+            source = n.get("文章来源") or n.get("来源") or ""
+            prefix = f"[{published_at}] " if published_at else ""
+            suffix = f"（{source}）" if source else ""
+            print(f"- {prefix}{title}{suffix}")
         print()
 
     print(f"> [事实] 以上数据来自 akshare。数据时间: {as_of}")

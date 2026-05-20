@@ -1,6 +1,7 @@
 data/.cache/
 __pycache__/
 *.pyc
+.DS_Store
 .venv/
 .env
 *.token
@@ -8,4 +9,5 @@ backtest/runs/
 journal/trades/
 journal/reviews/
 reports/*.md
+reports/*.pdf
 reports/cron.log

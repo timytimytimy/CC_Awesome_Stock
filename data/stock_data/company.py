@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import sys
+from datetime import date, timedelta
 from typing import Optional
 import pandas as pd
 
@@ -80,24 +81,28 @@ def get_valuation(ticker: str) -> dict:
     import akshare as ak
     symbol = _normalize_ticker(ticker)
     try:
-        df = ak.stock_a_ttm_lyr(symbol=symbol)
-        if df is None or df.empty:
+        pe_df = ak.stock_zh_valuation_baidu(
+            symbol=symbol, indicator="市盈率(TTM)", period="近一年"
+        )
+        pb_df = ak.stock_zh_valuation_baidu(
+            symbol=symbol, indicator="市净率", period="近一年"
+        )
+
+        pe, pe_pct, pe_date = _latest_value_and_percentile(pe_df)
+        pb, pb_pct, pb_date = _latest_value_and_percentile(pb_df)
+
+        if pe is None and pb is None:
             return {"ticker": ticker, "error": "no valuation data"}
-        latest = df.sort_values(df.columns[0], ascending=False).iloc[0]
-        pe = _safe_float(latest, "pe_ttm") or _safe_float(latest, "PE")
-        pb = _safe_float(latest, "pb") or _safe_float(latest, "PB")
 
-        # 计算历史分位（使用全部历史数据）
-        pe_col = "pe_ttm" if "pe_ttm" in df.columns else "PE"
-        pb_col = "pb" if "pb" in df.columns else "PB"
-        pe_series = pd.to_numeric(df[pe_col], errors="coerce").dropna()
-        pb_series = pd.to_numeric(df[pb_col], errors="coerce").dropna()
-
-        pe_pct = round((pe_series < pe).mean() * 100, 1) if pe and len(pe_series) > 10 else None
-        pb_pct = round((pb_series < pb).mean() * 100, 1) if pb and len(pb_series) > 10 else None
-
-        return {"ticker": ticker, "pe_ttm": pe, "pb": pb,
-                "pe_percentile": pe_pct, "pb_percentile": pb_pct}
+        return {
+            "ticker": ticker,
+            "pe_ttm": pe,
+            "pb": pb,
+            "pe_percentile": pe_pct,
+            "pb_percentile": pb_pct,
+            "valuation_date": pe_date or pb_date,
+            "source": "akshare.stock_zh_valuation_baidu",
+        }
     except Exception as e:
         print(f"[WARN] valuation {ticker}: {e}", file=sys.stderr)
         return {"ticker": ticker, "error": str(e)}
@@ -108,10 +113,19 @@ def get_announcements(ticker: str, limit: int = 5) -> list[dict]:
     import akshare as ak
     symbol = _normalize_ticker(ticker)
     try:
-        df = ak.stock_notice_report(symbol=symbol)
-        if df is None or df.empty:
+        end_date = date.today()
+        begin_date = end_date - timedelta(days=90)
+        result = ak.stock_individual_notice_report(
+            security=symbol,
+            symbol="全部",
+            begin_date=begin_date.strftime("%Y%m%d"),
+            end_date=end_date.strftime("%Y%m%d"),
+        )
+        if result is None or result.empty:
             return []
-        return df.head(limit).to_dict("records")
+        if "公告日期" in result.columns:
+            result = result.sort_values("公告日期", ascending=False)
+        return result.head(limit).to_dict("records")
     except Exception as e:
         print(f"[WARN] announcements {ticker}: {e}", file=sys.stderr)
         return []
@@ -128,3 +142,23 @@ def _safe_float(row, col: str) -> Optional[float]:
         return round(float(v), 2) if v is not None and str(v) not in ("", "nan", "-") else None
     except Exception:
         return None
+
+
+def _latest_value_and_percentile(df: pd.DataFrame) -> tuple[Optional[float], Optional[float], Optional[str]]:
+    if df is None or df.empty or "value" not in df.columns:
+        return None, None, None
+
+    data = df.copy()
+    if "date" in data.columns:
+        data["date"] = pd.to_datetime(data["date"], errors="coerce")
+        data = data.sort_values("date")
+    series = pd.to_numeric(data["value"], errors="coerce").dropna()
+    if series.empty:
+        return None, None, None
+
+    latest = round(float(series.iloc[-1]), 2)
+    percentile = float(round((series < latest).mean() * 100, 1)) if len(series) > 10 else None
+    latest_date = None
+    if "date" in data.columns and pd.notna(data.iloc[-1]["date"]):
+        latest_date = str(data.iloc[-1]["date"].date())
+    return latest, percentile, latest_date
