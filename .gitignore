@@ -7,3 +7,5 @@ __pycache__/
 backtest/runs/
 journal/trades/
 journal/reviews/
+reports/*.md
+reports/cron.log
