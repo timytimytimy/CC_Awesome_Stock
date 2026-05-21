@@ -29,6 +29,8 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 ```
 `kb/retail-practitioners/` 是散户可执行性层，只能用于仓位、组合、ETF 替代、心理承受力和执行难度评估；不得替代公告、财报、行情数据、回测或用户自己的复盘。
 
+> **特别说明**：`kb/playbooks/lihai-stock-research-checklist.md` 属于 **playbook 层**（不是 retail-practitioners 层），内容为研究方法论框架（硬否决/六问/20问/五类机会），权重等同于其他 playbook，可用于单股研究的方法论自检和机会分类，不受"散户实践者限制"约束。
+
 ## 强制约束（违反则报告无效）
 
 1. 每个判断必须标注 `[事实]` / `[推断]` / `[假设]` / `[情绪]` / `[传闻]`
@@ -67,6 +69,11 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 29. **【能力圈门槛】**候选股所属行业的能力圈评分（`circle-of-competence.yaml`）决定档位上限：level≥3 可进 A 档；level=2 最高 B 档；level=1 进 B 档需更高置信度；level=0 最高 C 档。能力圈外的标的必须在报告中显式标注。
 30. **【仓位换算义务】**执行信号表的"仓位上限"必须用 `data/scripts/position_calc.py` 换算成**具体股数 + 金额**。若标的买不起一手、或低于 `min_order_amount`、或超过 `max_single_stock_pct`，必须显式标注"不可执行"并给出 ETF/降低标的等替代方案。
 31. **【错题命中检测】**每只候选股必须对照 `journal/lessons/*.md`。若候选股的形态/逻辑命中历史错题模式（如 FOMO 追高、亏损加仓），必须在报告中显式引用该 lesson 并降低档位或提升风险扣分。
+32. **【里海研究框架义务】**阶段 4 单股深度分析必须：
+    - **前置**：先过 `kb/playbooks/lihai-stock-research-checklist.md` 的"硬否决清单"（11条）；命中任意一条直接放弃，不再做深度分析。
+    - **定性主线**：用"六问分析法"构建研究框架，回答"利润从哪来、过去为何涨跌、未来核心变量、是否已定价、看错亏多少、买持卖证据链"。
+    - **自检**：多流派交叉验证后，对照里海"20问清单"检查利润拆解、预期差、证伪条件和仓位理由。
+    - **机会标注**：用里海"五类机会"（战略/战术/等待/放弃/可买入）标注当前候选的机会性质，对应输出的信号建议和持有周期描述。
 
 ## 运行模式
 
