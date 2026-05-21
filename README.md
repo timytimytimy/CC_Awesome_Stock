@@ -101,10 +101,12 @@ cp journal/lessons/_template.md journal/lessons/YYYY-MM-DD-short-title.md
 ### 已完成（MVP）
 
 - **流派档案** (6个): 主线资金/产业趋势/基本面财报/趋势成长/长期价值/逆向赔率
-- **作者档案** (11个): William O'Neil / 林园 / 冯柳 / 段永平 / 唐朝 / 邱国鹭 / 高善文 / 任泽平 / 巴菲特 / 芒格 / Howard Marks
-- **散户实践者档案** (10个): 长期配置/ETF、A股短线情绪、泛财经/外盘映射三组
-- **Playbooks** (5个): 大盘判断/行业筛选/公司映射/买卖规则/风险检查
-- **Taxonomy** (3个 YAML): schools/themes/industry-mapping
+- **作者档案** (18个): William O'Neil / 林园 / 冯柳 / 段永平 / 唐朝 / 邱国鹭 / 高善文 / 任泽平 / 巴菲特 / 芒格 / Howard Marks / 张坤 / 朱少醒 / 但斌 / 董宝珍 / 李蓓 / Peter Lynch / 姜诚
+- **散户实践者档案** (11个): 长期配置/ETF、A股短线情绪、泛财经/外盘映射、基本面深度研究（里海）四组
+- **典型案例** (4个): 茅台长期价值 / 白酒反腐逆向 / 半导体CANSLIM / 医药集采分化
+- **Playbooks** (6个): 大盘判断/行业筛选/公司映射/买卖规则/风险检查/里海单股研究清单
+- **Taxonomy** (4个 YAML): schools/themes/industry-mapping/capability-matrix（能力路由表）
+- **能力路由表**: 按"分析环节+市场状态+股票类型"路由视角，取代无脑全员交叉验证，含结构化反对机制
 - **真实数据分析层**: 宏观、行业基本面、公司财报、政策事件四条数据流
 - **个人化基础层**: 个人投资档案、能力圈、仓位换算、交易日志汇总、错题本
 - **数据脚本** (12个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases

@@ -49,12 +49,17 @@
 
 ### deep_dive
 
-- `trend-growth lens`：O'Neil / 趋势成长检查项。
-- `long-value lens`：巴菲特 / 芒格 / 段永平 / 林园检查项。
-- `industry-trend lens`：产业趋势、政策和景气检查项。
-- `contrarian-odds lens`：冯柳 / Howard Marks / 邱国鹭检查项。
-- `retail-execution lens`：E大 / 银行螺丝钉 / 望京博格 / 沈潜执行检查项。
-- `bear-case lens`：只找不买理由和矛盾证据。
+deep_dive 的 lens **不固定**，按候选股在阶段 3 定性的 `stock_type` 查 `kb/taxonomy/capability-matrix.yaml` 的 `stock_type_routing` 动态决定。
+
+固定开 2 个 lens：
+- `primary-lens`：加载路由表为该 stock_type 指定的 primary 作者视角检查项（如 consumer_brand → 张坤/林园/段永平/Lynch 检查项）。
+- `bear-case lens`：加载路由表 `bear_case` 指定的强制对手，认真回答其 challenge 问题，只找不买理由和矛盾证据。
+
+按需追加：
+- `retail-execution lens`：ETF 替代、仓位、盯盘需求、心理承受力（用户资金敏感或候选执行难度高时开）。
+- `data-quality lens`：财务、估值、技术、流动性核查（候选财报存疑时开）。
+
+**核心变化**：不再为每只股票都开"全 4 流派 + 散户执行"6 个 lens。一只消费股不需要趋势成长 lens，一只科技成长股不需要长期价值 lens——路由表已排除不相关视角。这样省 subagent 开销，也让每个 lens 的判断更聚焦。
 
 ## subagent 输出契约
 

@@ -16,6 +16,9 @@ ls journal/lessons/*.md 2>/dev/null && cat journal/lessons/*.md
 # 检查过期档案
 grep -l "review_due" kb/authors/*.md | xargs grep "review_due:"
 
+# 读取能力路由表（决定各环节加载哪些视角 — 取代无脑全员交叉验证）
+cat kb/taxonomy/capability-matrix.yaml
+
 # 如需引用散户实践者，先读来源质量规则
 test -f kb/retail-practitioners/source-quality.md && sed -n '1,220p' kb/retail-practitioners/source-quality.md
 
@@ -38,6 +41,18 @@ test -f "$SKILL_REF_DIR/subagent-protocol.md" && sed -n '1,220p' "$SKILL_REF_DIR
 - `deep_dive`：阶段 4→5，对指定股票深度分析。
 
 若用户说“推荐股票 / 主动选股 / 全市场选股 / 本周候选”，默认 `weekly_pick`。
+
+## 视角路由模型（贯穿全流程）
+
+**不再无脑全员交叉验证。** 每个环节加载哪些作者/流派视角，由 `kb/taxonomy/capability-matrix.yaml` 决定：
+
+- **第一层 `stage_routing`**：阶段 1/2/5 按环节加载。如阶段 1 只加载高善文、Howard Marks、李蓓；唐朝/张坤等不做宏观择时的人在 `avoid` 名单，本环节不加载。
+- **第二层 `stock_type_routing`**：阶段 3 给候选股定性（消费品牌/成长科技/低估价值/逆向困境/周期），阶段 4 按类型加载对应 primary/secondary 作者。
+- **第三层 `regime_weighting`**：按阶段 1 得出的市场状态（复苏/过热/滞胀/衰退/恐慌底）对视角调权。
+- **强制对手（bear_case）**：每只候选股必须加载路由表为其类型指定的"强制对手"，作为最大反对理由来源。
+- **置信度加权**：作者权重 = 路由命中 × confidence 系数（high 1.0 / medium 0.7 / low 0.4）。
+
+加载视角时只读对应作者档案的指定章节（路由表 `author_sections` 字段，通常是 §2 分析流程 / §9 适用场景），不整篇读。
 
 ## 阶段 1 · 市场环境判断
 
@@ -68,7 +83,9 @@ cd data && python scripts/snapshot_market.py
 
 作为市场判断的**第一证据**，价格行为只是次级证据。
 
-读取 `kb/playbooks/market-regime.md` 对照判断后，**必须执行以下搜索**：
+**加载视角**（按路由表 `stage_routing.macro_market`）：读取 `kb/playbooks/market-regime.md` + 高善文 §2（信用周期定位）+ Howard Marks §2（市场温度/周期位置）+ 李蓓 §2（政策预判，medium confidence）。**不加载** 唐朝/张坤/林园/但斌/欧奈尔/Lynch——他们明确不做宏观择时，路由 `avoid` 名单已排除。
+
+对照判断后，**必须执行以下搜索**：
 
 ```
 WebSearch: "{today} A股 大盘 涨跌 原因"
@@ -124,7 +141,7 @@ cd data && python scripts/screen_sectors.py --top 10
 - ❌ **价值陷阱风险**（价格分位<30% + 动量恶化）：估值便宜但基本面恶化，避开
 - 🚧 **高位回调**（价格分位>70% + 动量转负）：趋势已转弱，禁止新仓
 
-读取 `kb/playbooks/sector-rotation.md` 和 `kb/taxonomy/themes.yaml`。
+**加载视角**（按路由表 `stage_routing.industry_screen`）：读取 `kb/playbooks/sector-rotation.md` + `kb/taxonomy/themes.yaml` + 邱国鹭 §2（"低估改善"四象限是行业判断核心框架）+ 高善文 §2（宏观→行业传导）+ 任泽平 §2（产业地图，low confidence，仅作联想先验）。
 
 识别出强主线后，**必须搜索该主线最新产业动态**：
 
@@ -181,6 +198,17 @@ cd data && python scripts/screen_all_market.py --top 30
 若不存在该脚本，必须在报告中披露：
 
 > 候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py`，是主线行业代表公司筛选，不代表全 A 股穷尽扫描。
+
+**股票类型定性（为阶段 4 视角路由做准备 — 必做）**：
+对每只入围候选股，归入 `capability-matrix.yaml` 的 `stock_type_routing` 某一类型：
+- `consumer_brand` 消费品牌型 — 白酒/食品/医药消费/品牌零售，靠定价权护城河
+- `growth_tech` 成长科技型 — 半导体/新能源/科技硬件软件，靠产业趋势+业绩加速
+- `deep_value` 低估价值型 — 银行/公用事业/传统行业 PE/PB 历史低分位
+- `contrarian_turnaround` 逆向困境反转型 — 因利空暴跌的好公司、行业恐慌底
+- `cyclical` 周期型 — 有色/钢铁/化工/航运/养殖，靠供需景气周期
+
+一只股票可命中多个类型（如"消费+低估"），取并集，阶段 4 加载视角和强制对手都取并集。
+类型决定阶段 4 加载谁——必须在进入阶段 4 前完成定性。
 
 **个人化前置过滤（在深度分析前执行，节省时间）**：
 1. **禁区过滤**：候选股若命中 `config/personal-profile.yaml` 的 `exclusions`（禁区行业/类型/个股黑名单），直接剔除，不进入阶段 4，并在报告说明排除原因。
@@ -295,17 +323,31 @@ WebSearch: "[公司名称] 业绩 订单 合同"
 
 若搜索结果无法获取或信息不足，明确标注"[数据缺失] 网络搜索未找到近期可靠信息，以下基于价格动量推断"，**不允许假装知情**。
 
-执行多流派交叉验证：
-1. **长期价值派视角**（读 kb/schools/05-long-value.md + kb/authors/lin-yuan.md §2/§9）
-2. **产业趋势派视角**（读 kb/schools/02-industry-trend.md §2/§9）
-3. **趋势成长派视角**（读 kb/schools/04-trend-growth.md + kb/authors/william-oneil.md §2）
-4. **逆向赔率派视角**（读 kb/schools/06-contrarian.md + kb/authors/feng-liu.md §2）
+**执行视角交叉验证（按路由表加载，不再固定全 4 流派）**：
 
-多流派输出必须是 checklist 结果，不得写”某某会买/某某推荐”。
+根据该候选股在阶段 3 定性的 `stock_type`，查 `capability-matrix.yaml` 的 `stock_type_routing`，加载对应视角：
+
+| 股票类型 | 加载的 primary 视角 | 强制对手（bear_case） |
+|---|---|---|
+| consumer_brand | 张坤 / 林园 / 段永平 / Lynch | Howard Marks（估值是否透支/抱团）+ 冯柳（博弈/接盘位） |
+| growth_tech | 欧奈尔 / 朱少醒 | 姜诚（成长溢价该不该付）+ 唐朝（三年后还在吗） |
+| deep_value | 唐朝 / 姜诚 / 巴菲特 | 欧奈尔（没趋势的死钱）+ 邱国鹭（是不是价值陷阱） |
+| contrarian_turnaround | 冯柳 / 董宝珍 / Howard Marks | 唐朝（结构性损毁还是一次性冲击）+ 芒格（接下落的刀） |
+| cyclical | 高善文 / 李蓓 | Howard Marks（是不是景气顶部用低 PE 买高利润） |
+
+加载规则：
+- 只读路由表 `author_sections` 指定的章节（通常 §2 分析流程 / §9 适用场景），不整篇读。
+- 命中多个类型 → 视角和对手都取并集。
+- 按 `regime_weighting` 用阶段 1 的市场状态调权（如恐慌底 → 逆向派权重拉满）。
+- 按 `confidence` 调权：low confidence 作者（任泽平）不得作为唯一依据。
+
+**强制对手（结构化反对）**：必须实际加载 bear_case 指定对手的视角，认真回答其 challenge 问题，结论写入候选详情的”反对理由”和执行信号表的”最大反对理由”。对手意见不是走形式——若对手提出的反对成立，必须降档。
+
+多视角输出必须是 checklist 结果，不得写”某某会买/某某推荐”。
 
 **里海 20 问自检（对照 `kb/playbooks/lihai-stock-research-checklist.md`）**：
 
-在多流派交叉验证完成后，对照里海 20 问清单做最终自检，重点确认：
+在视角交叉验证完成后，对照里海 20 问清单做最终自检，重点确认：
 - 问题 3：利润增长的来源拆解（价格/销量/毛利率/费用率/资产注入/周期/并购）
 - 问题 11-12：核心变化是什么 + 是否已被市场定价（预期差有无）
 - 问题 14：战术机会 vs 战略机会（对应短/中/长逻辑分类）

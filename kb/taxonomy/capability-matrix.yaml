@@ -1,0 +1,189 @@
+# ════════════════════════════════════════════════════════════════
+# 能力路由表 (Capability Matrix)
+# ────────────────────────────────────────────────────────────────
+# 作用：决定"这个分析环节/这类股票/这种市场状态，该调用哪些视角"。
+# 取代旧的"无脑全员交叉验证"——按需加载 3-5 个相关视角，而不是全部 18 位作者。
+#
+# skill 使用方式：
+#   1. 启动自检时读取本文件。
+#   2. 阶段 1/2 按 `stage_routing` 加载视角。
+#   3. 阶段 3 给候选股定性后，按 `stock_type_routing` 加载视角 + 强制对手。
+#   4. 按当前市场状态用 `regime_weighting` 调权。
+#   5. 作者权重 = 路由命中(primary/secondary) × confidence 系数(见 confidence_weighting)。
+#
+# 设计原则：
+#   - 路由命中 primary 才高权重；secondary 仅作补充；avoid 名单内的作者本环节不加载。
+#   - 每类候选股必须加载 bear_case 指定的"强制对手"，作为最大反对理由来源。
+#   - 本表是"加载清单"，不是"投票结果"。最终结论仍由主 agent 综合判断。
+# ════════════════════════════════════════════════════════════════
+
+version: 2
+last_updated: 2026-05-21
+
+# ────────────────────────────────────────────────────────────────
+# 第一层 · 按分析环节路由（对应五阶段）
+# ────────────────────────────────────────────────────────────────
+stage_routing:
+
+  macro_market:                       # 阶段 1 · 市场环境判断
+    primary: [gao-shanwen, howard-marks]
+    secondary: [li-bei]
+    avoid: [tang-chao, zhang-kun, lin-yuan, dan-bin, william-oneil, peter-lynch]
+    avoid_reason: 这些人明确不做宏观择时，把他们的观点用在大盘判断会失真
+    playbooks: [market-regime]
+    schools: [industry-trend]
+    focus: 信用周期定位（高善文）+ 市场温度/周期位置（Howard Marks）+ 政策预判（李蓓）
+
+  industry_screen:                    # 阶段 2 · 主线/行业筛选
+    primary: [qiu-guolu, gao-shanwen]
+    secondary: [ren-zeping, li-bei]
+    avoid: [peter-lynch, zhang-kun, dan-bin]
+    avoid_reason: 纯自下而上的选手不从行业入手，用在行业筛选会跑偏
+    playbooks: [sector-rotation]
+    schools: [industry-trend, contrarian-odds]
+    focus: 邱国鹭"低估改善"四象限是行业判断核心框架；高善文管宏观→行业传导；任泽平产业地图（低置信，仅作联想）
+
+  candidate_discovery:                # 阶段 3 · 候选公司发现
+    primary: [qiu-guolu]
+    secondary: [william-oneil, tang-chao]
+    note: 阶段 3 只做初筛和定性分类，深度视角在阶段 4 按 stock_type_routing 加载
+    playbooks: [company-to-thesis]
+
+  single_stock_deep:                  # 阶段 4 · 单股深度分析
+    note: 阶段 4 不用固定视角，必须先给候选股定性（见 stock_type_routing），再按类型加载
+    mandatory_framework: lihai-stock-research-checklist   # 六问法 + 20问 + 硬否决，所有类型通用
+    playbooks: [entry-exit-rules, lihai-stock-research-checklist]
+
+  risk_conclusion:                    # 阶段 5 · 风险检查 + 结论
+    primary: [munger, howard-marks, duan-yongping]
+    secondary: [lihai]
+    avoid: []
+    playbooks: [risk-checklist]
+    focus: 芒格"避免愚蠢"逆向清单 + Howard Marks"风险优先" + 段永平"能力圈/本分" + 里海"弱者/强者视角"
+
+# ────────────────────────────────────────────────────────────────
+# 第二层 · 按股票类型路由（阶段 3 定性后使用）
+# ────────────────────────────────────────────────────────────────
+# 阶段 3 必须先把每只候选股归入下列某一类型，阶段 4 才知道加载谁。
+# 一只股票可命中多个类型（如"消费+低估"），取并集加载，bear_case 也取并集。
+stock_type_routing:
+
+  consumer_brand:                     # 消费品牌型
+    description: 白酒/食品/医药消费/品牌零售等，靠定价权和护城河
+    primary: [zhang-kun, lin-yuan, duan-yongping, peter-lynch]
+    secondary: [dan-bin, tang-chao]
+    author_sections: {zhang-kun: "§2,§9", lin-yuan: "§2,§9", duan-yongping: "§2,§9", peter-lynch: "§2,§3"}
+    bear_case:
+      opponent: howard-marks
+      challenge: 估值是否已透支？是不是机构抱团的拥挤交易？
+      secondary_opponent: feng-liu
+      secondary_challenge: 资金面/博弈视角——这个位置是不是接盘位
+    cases: [600519-moutai-long-value-2003-2023]
+
+  growth_tech:                        # 成长科技型
+    description: 半导体/新能源/科技硬件/软件等，靠产业趋势和业绩加速
+    primary: [william-oneil, zhu-shaoxing]
+    secondary: [peter-lynch, ren-zeping]
+    author_sections: {william-oneil: "§2,§3", zhu-shaoxing: "§2,§9", peter-lynch: "§2"}
+    bear_case:
+      opponent: jiang-cheng
+      challenge: 成长溢价该不该付？PEG 是否已经透支多年增长？
+      secondary_opponent: tang-chao
+      secondary_challenge: 三年后这家公司的市场地位还确定吗
+    cases: [semiconductor-canslim-growth-2019-2021]
+
+  deep_value:                         # 低估价值型
+    description: 银行/公用事业/传统行业里 PE/PB 历史低分位的标的
+    primary: [tang-chao, jiang-cheng, buffett]
+    secondary: [qiu-guolu]
+    author_sections: {tang-chao: "§2,§3", jiang-cheng: "§2,§9", buffett: "§2"}
+    bear_case:
+      opponent: william-oneil
+      challenge: 没有趋势、没有相对强度——这是不是长期不涨的"死钱"
+      secondary_opponent: qiu-guolu
+      secondary_challenge: 这是"低估改善"还是"低估恶化"（价值陷阱）
+    cases: []
+
+  contrarian_turnaround:              # 逆向困境反转型
+    description: 因利空暴跌的好公司、行业恐慌底、困境反转
+    primary: [feng-liu, dong-baozhen, howard-marks]
+    secondary: [qiu-guolu]
+    author_sections: {feng-liu: "§2", dong-baozhen: "§2,§9", howard-marks: "§2,§9"}
+    bear_case:
+      opponent: tang-chao
+      challenge: 这个困境是一次性冲击，还是结构性损毁（护城河已永久受损）
+      secondary_opponent: munger
+      secondary_challenge: 是不是在接一把下落的刀
+    cases: [baijiu-anticorruption-contrarian-2013, pharma-collection-impact-2018-2022]
+
+  cyclical:                           # 周期型
+    description: 有色/钢铁/化工/航运/养殖等，靠供需和景气周期
+    primary: [gao-shanwen, li-bei]
+    secondary: [howard-marks]
+    author_sections: {gao-shanwen: "§2", li-bei: "§2,§9"}
+    bear_case:
+      opponent: howard-marks
+      challenge: 当前处于周期的哪个位置？是不是在景气顶部用低 PE 买高利润
+      secondary_opponent: ~
+    cases: []
+
+# ────────────────────────────────────────────────────────────────
+# 第三层 · 按市场状态调权（叠加在前两层之上）
+# ────────────────────────────────────────────────────────────────
+# 市场状态来自阶段 1 的 snapshot_macro（信用周期）+ 市场温度评级。
+# boost = 该状态下这些视角权重上调；suppress = 下调或仅作风险提示。
+regime_weighting:
+
+  recovery:                           # 复苏（信用扩张初期 / 牛市初期）
+    boost: [william-oneil, zhu-shaoxing, ren-zeping]
+    suppress: [howard-marks]
+    note: 趋势成长派和产业趋势派在此阶段最有效
+
+  overheat:                           # 过热（信用扩张末期 / 市场偏热）
+    boost: [howard-marks, jiang-cheng, munger]
+    suppress: [william-oneil, ren-zeping]
+    note: 逆向派开始出减仓信号；趋势派该准备撤退；成长股严控仓位
+
+  stagflation:                        # 滞胀（PPI 高 / 增长乏力）
+    boost: [gao-shanwen, li-bei, howard-marks]
+    suppress: [zhu-shaoxing, peter-lynch]
+    note: 宏观对冲视角主导；成长股性价比差
+
+  recession:                          # 衰退（信用收缩 / 经济下行）
+    boost: [howard-marks, jiang-cheng, tang-chao]
+    suppress: [william-oneil, zhu-shaoxing, ren-zeping]
+    note: 硬门 A2 生效——候选最高 B 档；深度价值和安全边际视角主导
+
+  panic_bottom:                       # 恐慌底（市场温度极冷 + 技术 C/D）
+    boost: [feng-liu, dong-baozhen, howard-marks, buffett]
+    suppress: [william-oneil]
+    note: 逆向赔率派权重拉满——这是他们唯一的主场
+
+# ────────────────────────────────────────────────────────────────
+# 置信度加权（叠加在路由命中之上）
+# ────────────────────────────────────────────────────────────────
+# 作者权重 = 路由命中系数 × confidence 系数。
+# confidence 字段取自每个 kb/authors/*.md 的 frontmatter。
+confidence_weighting:
+  high: 1.0
+  medium: 0.7
+  low: 0.4                            # low-confidence 作者（如任泽平）不得作为唯一依据
+  rule: 同一环节内若 primary 作者均为 low confidence，必须显式声明"本环节缺高置信视角"
+
+# ────────────────────────────────────────────────────────────────
+# 散户实践者层 · 单独处理（不进上面三层路由）
+# ────────────────────────────────────────────────────────────────
+retail_practitioners:
+  usage: 仅用于阶段 3/4 的执行适配、ETF/基金替代、组合、心理承受力评估
+  not_for: 不作单股买入依据，不单独提升结论等级
+  exception: kb/playbooks/ 下的方法论框架（如 lihai-stock-research-checklist）属 playbook 层，不受此限
+  index: kb/retail-practitioners/_index.md
+
+# ────────────────────────────────────────────────────────────────
+# 维护说明
+# ────────────────────────────────────────────────────────────────
+maintenance:
+  - 新增作者档案后，必须把其 slug 加入相应的 stage_routing / stock_type_routing。
+  - 新增作者若不归入任何路由，等于未接入知识库——加载它的代价是徒增上下文。
+  - bear_case 的 opponent 应选"方法论上最对立"的人，不是随便挑一个。
+  - 每季度复核：哪些视角从未被路由命中？哪些 bear_case 从未发现有效反对？
