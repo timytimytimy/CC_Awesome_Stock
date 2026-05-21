@@ -70,18 +70,21 @@ def main():
     if not args.include_bj:
         print("- 北交所: 已排除（当前后续 K 线/估值工具主要支持沪深）")
     print()
-    print("| 排名 | 股票 | 名称 | 得分 | 涨跌幅 | 成交额(亿) | 趋势 | RPS63 | PE分位 | ROE | 净利率 | 主要理由 |")
-    print("|---:|---|---|---:|---:|---:|---|---:|---:|---:|---:|---|")
+    print("| 排名 | 股票 | 名称 | 得分 | 涨跌幅 | 成交额(亿) | 距52周高 | 趋势 | RPS63 | PE分位 | ROE | 净利率 | 主要理由 |")
+    print("|---:|---|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---|")
     for idx, row in result.iterrows():
+        disc = row.get("discount_52w")
+        disc_str = f"{disc:.1f}%" if disc is not None and not pd.isna(disc) else "N/A"
         print(
             "| {rank} | {ticker} | {name} | {score:.1f} | {change:.2f}% | {amount:.1f} | "
-            "{trend} | {rps63} | {pe_pct} | {roe} | {margin} | {reason} |".format(
+            "{disc} | {trend} | {rps63} | {pe_pct} | {roe} | {margin} | {reason} |".format(
                 rank=idx + 1,
                 ticker=row["ticker"],
                 name=row["name"],
                 score=row["score"],
                 change=row["change_pct"],
                 amount=row["amount_billion"],
+                disc=disc_str,
                 trend=row.get("trend", "N/A"),
                 rps63=format_optional(row.get("rps63")),
                 pe_pct=format_optional(row.get("pe_percentile")),
@@ -92,7 +95,9 @@ def main():
         )
 
     print("\n> [事实] 快照来自 akshare，增强指标来自本地 stock_data 工具。")
-    print("> [推断] 得分用于候选排序，不等同于买入建议；仍需公告、新闻、风险检查和执行信号表二次确认。")
+    print("> [推断] 得分已纳入'距52周高点'和'估值分位'惩罚，弱化纯动量/趋势单因子。")
+    print("> [推断] 得分用于候选排序，不等同于买入建议；仍需公告、新闻、风险检查二次确认。")
+    print("> [提示] 本脚本为个股层面扫描，行业过热/低估请对照 `snapshot_industry.py`。")
 
 
 def load_market_snapshot(use_cache: bool = True) -> tuple[pd.DataFrame, str]:
@@ -168,8 +173,23 @@ def numeric_col(df: pd.DataFrame, col: str) -> pd.Series:
 
 
 def score_base_row(row: pd.Series) -> float:
+    """
+    基础分 = 成交额（流动性）+ 当日涨幅（钟形评分）。
+    钟形涨幅评分：温和上涨（2-5%）最优；涨停/接近涨停 → 追高惩罚。
+    旧版直接 change_pct*2 会让涨停股拿满分，系统性奖励追高。
+    """
     amount_score = min(math.log10(max(row["amount_billion"], 0.01) + 1) * 22, 25)
-    change_score = max(min(row["change_pct"], 10), -10) * 2
+    cp = float(row["change_pct"])
+    if cp < -10:
+        change_score = -10.0
+    elif cp <= 0:
+        change_score = cp * 0.6              # 小幅下跌轻微扣分
+    elif cp <= 5:
+        change_score = cp * 1.4              # 温和上涨加分，最高约 +7
+    elif cp <= 9.4:
+        change_score = 7.0 - (cp - 5) * 2.0  # 5%~9.4% 递减
+    else:
+        change_score = -8.0                 # 涨停/接近涨停 → 追高惩罚
     return amount_score + change_score
 
 
@@ -186,12 +206,15 @@ def enrich_row(row: pd.Series) -> dict:
     roe = fin.get("roe")
     net_margin = fin.get("net_margin")
     debt = fin.get("asset_liability_ratio")
+    # 个股距 52 周高点（负数，如 -2.0 表示距高点 2%）—— 高位过热的代理指标
+    discount_52w = tech.get("discount_from_52w_high_pct")
 
     score = score_base_row(row)
     reasons = []
 
+    # 趋势：弱化纯趋势的权重（原 +18 → +12），避免趋势单因子主导
     if trend == "uptrend":
-        score += 18
+        score += 12
         reasons.append("上升趋势")
     elif trend == "sideways":
         score += 7
@@ -201,16 +224,34 @@ def enrich_row(row: pd.Series) -> dict:
         reasons.append("趋势偏弱")
 
     if rps63 is not None:
-        score += max(min(rps63 / 3, 18), -12)
+        score += max(min(rps63 / 3, 15), -12)
         if rps63 > 10:
             reasons.append("RPS强")
 
+    # 个股价格位置惩罚：贴近 52 周高点 = 高位过热（不论所属行业）
+    if discount_52w is not None:
+        if discount_52w >= -3:
+            score -= 18
+            reasons.append("贴近52周高点(追高风险)")
+        elif discount_52w >= -10:
+            score -= 7
+            reasons.append("接近52周高点")
+        elif discount_52w <= -45:
+            score += 6
+            reasons.append("深度回调(潜在低吸)")
+
+    # 估值分位：高位惩罚加重（原 >80 仅 -10）
     if pe_pct is not None:
-        if pe_pct < 50:
+        if pe_pct < 40:
             score += 8
-            reasons.append("估值分位可控")
+            reasons.append("估值分位低")
+        elif pe_pct < 65:
+            score += 3
+        elif pe_pct > 95:
+            score -= 18
+            reasons.append("估值极端高位")
         elif pe_pct > 80:
-            score -= 10
+            score -= 12
             reasons.append("估值偏热")
 
     if roe is not None:
@@ -237,6 +278,7 @@ def enrich_row(row: pd.Series) -> dict:
         "score": round(score, 1),
         "change_pct": round(float(row["change_pct"]), 2),
         "amount_billion": round(float(row["amount_billion"]), 2),
+        "discount_52w": discount_52w,
         "trend": trend,
         "rps63": rps63,
         "pe_percentile": pe_pct,
