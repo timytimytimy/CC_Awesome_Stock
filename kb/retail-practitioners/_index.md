@@ -36,6 +36,14 @@
 | 美股投资网 / TradesMax | [tradesmax-us-market-watchlist.md](tradesmax-us-market-watchlist.md) | 美股资讯/商业平台 | 官网/X/数据工具/VIP资讯 | 美股科技、期权、中概热点线索 | low | watchlist，商业化和信号推送明显 |
 | 勃勃OC | [bboczeng-us-tech-sentiment.md](bboczeng-us-tech-sentiment.md) | 个人美股博客/X账号 | 博客/X/会员社群 | 中文美股科技与半导体情绪观察 | low | watchlist，付费社群和个人持仓风险 |
 
+## 已建档：A 股基本面深度研究
+
+| 实践者 | 文件 | 类型 | 主要工具 | 适合学习 | 初始权重 | 主要限制 |
+|---|---|---|---|---|---|---|
+| 里海 | [lihai.md](lihai.md) | 基本面研究/付费课程 | 飞书私域课程 | 六问法、财务排雷、20问清单、五类机会、买卖纪律 | **medium** | 付费课，幸存者偏差，无公开回测 |
+
+> 里海配套 Playbook：[里海研究体系·单股研究清单](../playbooks/lihai-stock-research-checklist.md)
+
 ## 待补方向
 
 - A 股财报拆解型博主：要求长期公开推理链和失败案例。
