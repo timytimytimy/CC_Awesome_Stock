@@ -3,7 +3,14 @@
 ## 阶段 0 · 启动自检
 
 ```bash
-# 读取所有教训
+# 读取个人化配置（根输入 — 决定仓位/止损/禁区/能力圈）
+cat config/personal-profile.yaml 2>/dev/null || echo "[未建个人档案，将用通用假设]"
+cat config/circle-of-competence.yaml 2>/dev/null || echo "[未建能力圈档案]"
+
+# 读取交易日志与行为偏见汇总
+cd data && python scripts/journal_summary.py 2>/dev/null; cd ..
+
+# 读取所有教训（错题本）
 ls journal/lessons/*.md 2>/dev/null && cat journal/lessons/*.md
 
 # 检查过期档案
@@ -175,6 +182,16 @@ cd data && python scripts/screen_all_market.py --top 30
 
 > 候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py`，是主线行业代表公司筛选，不代表全 A 股穷尽扫描。
 
+**个人化前置过滤（在深度分析前执行，节省时间）**：
+1. **禁区过滤**：候选股若命中 `config/personal-profile.yaml` 的 `exclusions`（禁区行业/类型/个股黑名单），直接剔除，不进入阶段 4，并在报告说明排除原因。
+2. **能力圈门槛**：用 `config/circle-of-competence.yaml` 标注每只候选股所属行业的能力圈评分（level 0-4），决定其档位上限：
+   - level≥3 → 可进 A 档
+   - level=2 → 最高 B 档
+   - level=1 → 进 B 档需更高置信度
+   - level=0 → 最高 C 档（跟踪事件）
+3. **持仓去重**：对照 `journal/trades/` 已持仓标的，避免重复推荐。
+4. **错题预筛**：对照 `journal/lessons/`，命中历史错题模式的候选标记警告。
+
 同时读取 `kb/retail-practitioners/_index.md`，对候选池做散户可执行性初筛：
 - 若个股逻辑不能明显优于行业 ETF / 宽基 ETF / 现金等待，标记为"可执行性不足"。
 - 若候选股依赖高频盯盘、低流动性、复杂衍生品或重仓单一主题，降低进入阶段 4 的优先级。
@@ -281,6 +298,19 @@ WebSearch: "[公司名称] 业绩 订单 合同"
 走 `kb/playbooks/risk-checklist.md` 全部项目。
 
 按 `references/scoring-rubric.md` 计算候选排序和分档。评分只用于排序，不得跳过风险检查。
+
+**仓位换算（必做）**：对每只进入 A/B/C 档的候选股，运行：
+
+```bash
+cd data && python scripts/position_calc.py <ticker> --pct <建议仓位>
+```
+
+把抽象的"仓位上限 X%"换算成**具体股数 + 金额 + 止损价 + 往返手续费**。
+- 若结果"不可执行"（买不起一手 / 低于 min_order_amount / 超过 max_single_stock_pct），
+  必须在执行信号表显式标注，并给出替代方案（ETF / 换标的 / 等待）。
+- 止损价用 `personal-profile.yaml` 的 `risk.stop_loss_*`，不得用通用默认值。
+
+**错题命中检测（必做）**：每只候选股对照 `journal/lessons/`，命中错题模式则显式引用并降级。
 
 输出 D 段 + E 段。
 E 段结论从 5 个枚举值之一选择：

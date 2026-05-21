@@ -1,0 +1,48 @@
+# ════════════════════════════════════════════════════════════
+# 能力圈地图 (circle-of-competence)
+# ════════════════════════════════════════════════════════════
+# 对齐巴菲特/段永平核心原则：能力圈外的不碰。
+#
+# 评分 0-4：
+#   0 = 完全不懂
+#   1 = 只懂概念，说不清它怎么赚钱
+#   2 = 懂基本商业模式和财报
+#   3 = 深入研究过，跟踪过多家公司
+#   4 = 长期跟踪 + 有实战经验，能判断行业拐点
+#
+# 决策门槛（系统强制）：
+#   - A 档（强观察）只允许 level >= 3 的行业
+#   - level <= 1 的行业，候选股需要更高置信度才能进 B 档
+#   - level = 0 的行业，候选股最高 C 档（跟踪事件）
+#
+# 用法：复制本文件为 config/circle-of-competence.yaml 并按实际情况打分。
+# ════════════════════════════════════════════════════════════
+
+circle:
+  半导体:      {level: 1, note: ""}
+  消费电子:    {level: 1, note: ""}
+  白酒:        {level: 2, note: ""}
+  食品饮料:    {level: 2, note: ""}
+  医药生物:    {level: 1, note: ""}
+  银行:        {level: 2, note: ""}
+  非银金融:    {level: 1, note: ""}
+  新能源:      {level: 1, note: ""}
+  电力设备:    {level: 1, note: ""}
+  汽车:        {level: 1, note: ""}
+  机械设备:    {level: 1, note: ""}
+  有色金属:    {level: 1, note: ""}
+  煤炭:        {level: 1, note: ""}
+  计算机:      {level: 1, note: ""}
+  通信:        {level: 1, note: ""}
+  传媒:        {level: 1, note: ""}
+  军工:        {level: 0, note: ""}
+  房地产:      {level: 1, note: ""}
+  建筑:        {level: 0, note: ""}
+  农林牧渔:    {level: 0, note: ""}
+  基础化工:    {level: 0, note: ""}
+  钢铁:        {level: 0, note: ""}
+
+meta:
+  created: 2026-05-21
+  last_updated: 2026-05-21
+  auto_update_from_journal: true   # 允许从 journal/trades 反推更新理解度

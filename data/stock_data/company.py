@@ -7,11 +7,13 @@ from typing import Optional
 import pandas as pd
 
 
-def get_kline(ticker: str, period: int = 120, as_of: Optional[str] = None) -> pd.DataFrame:
+def get_kline(ticker: str, period: int = 120, as_of: Optional[str] = None,
+              adjust: str = "hfq") -> pd.DataFrame:
     """
-    获取 K 线数据（日线，前复权）。
+    获取 K 线数据（日线）。
     ticker: 600519.SH 或 000858.SZ 格式
     period: 获取近 N 个交易日
+    adjust: "hfq" 后复权（默认，用于技术指标）/ "" 不复权（实际市价，用于仓位换算）
     数据源：新浪财经（非东方财富，稳定可用）
     """
     import akshare as ak
@@ -23,7 +25,7 @@ def get_kline(ticker: str, period: int = 120, as_of: Optional[str] = None) -> pd
     else:
         symbol = f"sz{code}"
     try:
-        df = ak.stock_zh_a_daily(symbol=symbol, adjust="hfq")
+        df = ak.stock_zh_a_daily(symbol=symbol, adjust=adjust)
         if df is None or df.empty:
             return pd.DataFrame()
         df["date"] = pd.to_datetime(df["date"])

@@ -13,13 +13,15 @@ description: |
 ## 必读：启动自检
 
 开始任何分析前，必须完成：
-1. 读取 `journal/lessons/*.md` 全部教训（权重最高）
-2. 扫描 `kb/authors/*.md` frontmatter 中 `review_due` 字段，若有档案已过期则提示用户
-3. 确认本次分析周期（用户未指定时默认 `mid`）
-4. 若使用散户博主/实践者观点，先读取 `kb/retail-practitioners/source-quality.md` 的准入和排除规则
-5. 确认运行模式：`quick_scan` / `weekly_pick` / `deep_dive`
-6. 若使用 subagent，先读取 `references/subagent-protocol.md`
-7. 若进行主动选股或候选排序，先读取 `references/scoring-rubric.md`
+1. **读取个人化配置**：`config/personal-profile.yaml`（资金/风险/仓位规则/禁区/成本）和 `config/circle-of-competence.yaml`（能力圈）。文件不存在则提示用户复制 example 建档；存在但 `meta.owner` 为空则提示可能仍是默认值。
+2. 读取 `journal/lessons/*.md` 全部教训（权重最高）
+3. 读取 `journal/trades/*.md` 了解当前持仓与历史交易（避免重复推荐已持有标的；可运行 `data/scripts/journal_summary.py` 看行为偏见汇总）
+4. 扫描 `kb/authors/*.md` frontmatter 中 `review_due` 字段，若有档案已过期则提示用户
+5. 确认本次分析周期（用户未指定时默认 `mid`）
+6. 若使用散户博主/实践者观点，先读取 `kb/retail-practitioners/source-quality.md` 的准入和排除规则
+7. 确认运行模式：`quick_scan` / `weekly_pick` / `deep_dive`
+8. 若使用 subagent，先读取 `references/subagent-protocol.md`
+9. 若进行主动选股或候选排序，先读取 `references/scoring-rubric.md`
 
 **决策权重顺序**（必须遵守）：
 ```
@@ -60,6 +62,11 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
     - ROE 5 年内出现亏损年份 → 长期价值派路径直接排除
     - 扣非/净利润 < 0.7 → 主营盈利存疑，必须在反对意见中列出
 26. **【政策事件义务】**阶段 1/2 必须运行 `data/scripts/policy_track.py` 并读取 `data/events/policy/_recent.md`。报告 A/B 段必须列出近期"真信号级"政策事件及其影响行业。政策原文标 [事实]，传导链标 [推断]，涨跌预测标 [假设]；禁止把"政策利好"直接当买入信号。`kb/event-stock-mapping.yaml` 仅作参考先验，不得硬查表。
+27. **【个人化配置义务】**所有报告必须基于 `config/personal-profile.yaml` 计算仓位、止损和成本。止损线用 profile 的 `risk.stop_loss_*`；不得用通用默认值。配置缺失时必须在报告显著位置提示"未建个人档案，以下为通用假设"。
+28. **【禁区过滤】**候选股若命中 `personal-profile.yaml` 的 `exclusions`（禁区行业/类型/个股黑名单），必须在阶段 3 直接排除，不进入深度分析，并在报告中说明排除原因。
+29. **【能力圈门槛】**候选股所属行业的能力圈评分（`circle-of-competence.yaml`）决定档位上限：level≥3 可进 A 档；level=2 最高 B 档；level=1 进 B 档需更高置信度；level=0 最高 C 档。能力圈外的标的必须在报告中显式标注。
+30. **【仓位换算义务】**执行信号表的"仓位上限"必须用 `data/scripts/position_calc.py` 换算成**具体股数 + 金额**。若标的买不起一手、或低于 `min_order_amount`、或超过 `max_single_stock_pct`，必须显式标注"不可执行"并给出 ETF/降低标的等替代方案。
+31. **【错题命中检测】**每只候选股必须对照 `journal/lessons/*.md`。若候选股的形态/逻辑命中历史错题模式（如 FOMO 追高、亏损加仓），必须在报告中显式引用该 lesson 并降低档位或提升风险扣分。
 
 ## 运行模式
 

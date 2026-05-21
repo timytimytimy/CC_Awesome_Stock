@@ -8,10 +8,11 @@
 知识库 (kb/)  +  数据层 (data/)  →  Skill (.claude/skills/a-stock-analyst/ 和 .agents/skills/a-stock-analyst/)
 ```
 
+- **config/**：你个人的配置——投资档案（资金/风险/仓位规则/禁区）和能力圈，是所有报告的根输入
 - **kb/**：蒸馏自多位优秀分析者的方法论知识库（schools/authors/playbooks/taxonomy）
 - **kb/retail-practitioners/**：贴近普通投资者的公开实践者档案，用于执行适配、ETF/基金替代、组合和心理承受力参考
-- **data/**：基于 akshare 的行情/财报/资金 CLI 数据脚本
-- **journal/**：你自己的交易复盘（权重最高）
+- **data/**：基于 akshare 的行情/宏观/行业/财报/政策 CLI 数据脚本
+- **journal/**：你自己的交易日志（trades/）和错题本（lessons/），权重最高
 - **backtest/**：量化回测
 - **.claude/skills/a-stock-analyst/**：Claude Code skill，五阶段决策辅助
 - **.agents/skills/a-stock-analyst/**：Codex/Agents skill，和 Claude 入口保持同一套分析规则
