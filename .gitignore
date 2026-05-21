@@ -11,3 +11,4 @@ journal/reviews/
 reports/*.md
 reports/*.pdf
 reports/cron.log
+data/events/policy/*.md

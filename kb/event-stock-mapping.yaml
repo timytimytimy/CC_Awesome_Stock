@@ -1,0 +1,192 @@
+# 政策事件 → 行业/个股 映射先验知识库
+#
+# 用途：给 skill 阶段 1/2 的 industry-catalyst subagent 当"参考先验"。
+# 重要：这不是硬查表。subagent 必须基于政策原文 + 当前行业位置做最终判断，
+#       mapping 只帮它快速联想历史规律，避免"刻舟求剑"。
+#
+# 标注规则：
+#   - 政策原文存在 = [事实]
+#   - 传导链逻辑 = [推断]
+#   - "所以某行业会涨" = [假设]，必须结合当前估值位置二次确认
+#
+# 字段说明：
+#   trigger_keywords：政策原文里出现这些词，提示该映射可能相关
+#   transmission：政策如何传导到股价的逻辑链
+#   beneficiaries：历史上受益的行业（不等于这次一定受益）
+#   losers：历史上受损的行业
+#   historical_case：过往案例，帮助判断强度和时滞
+#   caveat：使用时必须注意的陷阱
+
+version: "2026-05"
+
+mappings:
+
+  # ── 货币政策 ──────────────────────────────────────────
+  rate_cut_china:
+    name: 央行降息/降准/LPR下调
+    trigger_keywords: [降息, 降准, LPR, MLF, 逆回购, 存款准备金率, 货币政策]
+    transmission: "无风险利率下行 → 权益估值中枢上移 + 企业融资成本下降 + 高股息相对吸引力变化"
+    beneficiaries:
+      - {industry: 房地产, logic: "按揭利率下降刺激销售"}
+      - {industry: 券商, logic: "流动性宽松利好交易量和两融"}
+      - {industry: 成长股(科技/医药), logic: "贴现率下降，远期现金流估值提升"}
+    losers:
+      - {industry: 银行, logic: "净息差收窄"}
+    historical_case: "2024 多次降准降息，券商和地产阶段性反弹"
+    caveat: "降息预期常被提前消化，落地时可能利好出尽；要看是否超预期"
+
+  # ── 美联储 ──────────────────────────────────────────
+  fed_rate_cut:
+    name: 美联储降息
+    trigger_keywords: [美联储, 联储, 降息, FOMC, 鲍威尔, 议息]
+    transmission: "美元走弱 → 大宗商品涨 + 新兴市场资金回流 + 中美利差收窄缓解人民币压力"
+    beneficiaries:
+      - {industry: 有色金属, logic: "美元计价大宗商品上涨"}
+      - {industry: 黄金, logic: "实际利率下行利好黄金"}
+      - {industry: 港股科技, logic: "流动性敏感型资产估值修复"}
+      - {industry: 创新药, logic: "依赖融资的成长股受益"}
+    losers: []
+    historical_case: "2024-09 美联储降息后有色和港股科技阶段性走强"
+    caveat: "降息若因衰退触发，风险资产可能先跌后涨；要区分'预防式降息'和'衰退式降息'"
+
+  fed_rate_hike:
+    name: 美联储加息/维持高利率
+    trigger_keywords: [美联储, 加息, 鹰派, 高利率, 缩表]
+    transmission: "美元走强 → 北上资金承压 + 成长股估值压缩 + 人民币贬值压力"
+    beneficiaries:
+      - {industry: 出口链, logic: "人民币贬值利好出口商"}
+    losers:
+      - {industry: 成长股(半导体/AI), logic: "高贴现率压制远期估值"}
+      - {industry: 黄金, logic: "实际利率上行压制金价"}
+    historical_case: "2022-2023 加息周期，A 股成长股估值大幅压缩"
+    caveat: "关注中美利差，深度倒挂时北上资金流出压力大"
+
+  # ── 半导体/科技战 ────────────────────────────────────
+  semiconductor_export_control:
+    name: 半导体出口管制/科技战升级
+    trigger_keywords: [出口管制, 实体清单, 半导体, 芯片, EAR, 制裁, 国产替代, 自主可控]
+    transmission: "海外供应受限 → 国产替代加速 → 国产设备/材料/设计公司订单提升"
+    beneficiaries:
+      - {industry: 半导体设备, logic: "晶圆厂转向国产设备", stocks: [北方华创, 中微公司, 盛美上海]}
+      - {industry: 半导体材料, logic: "国产材料验证导入加速"}
+      - {industry: EDA/IP, logic: "设计工具国产化"}
+    losers:
+      - {industry: 依赖进口设备的封测厂, logic: "高端设备采购受限"}
+    historical_case: "2022-2025 多轮管制，国产替代成为持续主线"
+    caveat: "国产替代是长逻辑但兑现慢；股价常领先基本面，警惕预期透支后的回调"
+
+  ai_compute_policy:
+    name: AI/算力基础设施政策
+    trigger_keywords: [人工智能, 算力, 大模型, 数据中心, 东数西算, 智算]
+    transmission: "政策支持算力投资 → 服务器/光模块/芯片需求 + 应用侧落地"
+    beneficiaries:
+      - {industry: 算力硬件, logic: "服务器、光模块、液冷需求"}
+      - {industry: AI应用软件, logic: "大模型商业化落地"}
+    losers: []
+    historical_case: "2023 AI 行情由 ChatGPT 催化，算力链大涨"
+    caveat: "算力链对海外大厂资本开支敏感；应用侧商业化常不及预期"
+
+  # ── 房地产 ──────────────────────────────────────────
+  property_support:
+    name: 房地产支持政策
+    trigger_keywords: [房地产, 保交楼, 限购, 房贷, 收储, 城中村, 住房]
+    transmission: "政策托底 → 销售/竣工预期改善 → 地产链（建材/家电/家居）需求修复"
+    beneficiaries:
+      - {industry: 房地产开发, logic: "销售预期改善"}
+      - {industry: 建筑材料, logic: "竣工链需求"}
+      - {industry: 家用电器, logic: "地产后周期消费"}
+    losers: []
+    historical_case: "2024 多轮地产松绑，地产链脉冲式反弹但持续性弱"
+    caveat: "地产政策市场已多次'狼来了'，需观察销售数据是否真改善，不要只炒政策预期"
+
+  # ── 消费刺激 ─────────────────────────────────────────
+  consumption_stimulus:
+    name: 消费刺激/以旧换新
+    trigger_keywords: [消费, 以旧换新, 消费券, 内需, 扩内需, 提振消费, 服务消费]
+    transmission: "补贴刺激 → 耐用消费品（家电/汽车）需求前置 + 服务消费修复"
+    beneficiaries:
+      - {industry: 家用电器, logic: "以旧换新直接受益"}
+      - {industry: 汽车, logic: "购置补贴刺激销量"}
+      - {industry: 社会服务, logic: "服务消费修复"}
+    losers: []
+    historical_case: "2024-2025 以旧换新政策，家电板块阶段受益"
+    caveat: "补贴政策透支未来需求，政策退坡时需求可能回落"
+
+  # ── 新能源 ───────────────────────────────────────────
+  new_energy_policy:
+    name: 新能源/双碳政策
+    trigger_keywords: [新能源, 光伏, 风电, 储能, 双碳, 碳中和, 电力市场化]
+    transmission: "装机目标/补贴 → 产业链需求；但产能过剩时政策可能转向'反内卷'"
+    beneficiaries:
+      - {industry: 储能, logic: "电力市场化催生储能需求"}
+      - {industry: 电网设备, logic: "新型电力系统投资"}
+    losers:
+      - {industry: 光伏制造, logic: "产能过剩下政策利好难抵消供给压力"}
+    historical_case: "2021 新能源大牛市后，2022-2024 产能过剩持续杀估值"
+    caveat: "区分'需求侧政策'和'供给侧出清'；产能过剩行业利好可能无效"
+
+  # ── 国企改革/市值管理 ────────────────────────────────
+  soe_reform:
+    name: 国企改革/市值管理/中特估
+    trigger_keywords: [国企改革, 市值管理, 中特估, 央企, 国资委, 提质增效, 分红]
+    transmission: "考核引入市值/分红 → 低估值高股息央企估值修复"
+    beneficiaries:
+      - {industry: 银行, logic: "破净央企市值管理诉求强"}
+      - {industry: 石油石化, logic: "高股息央企"}
+      - {industry: 建筑装饰, logic: "破净央企估值修复"}
+    losers: []
+    historical_case: "2023-2024 中特估行情，三桶油、银行阶段性走强"
+    caveat: "中特估是估值修复逻辑，缺乏盈利增长支撑；行情常脉冲式、不持续"
+
+  # ── 医药 ─────────────────────────────────────────────
+  healthcare_procurement:
+    name: 医保谈判/集采
+    trigger_keywords: [集采, 医保, 医保谈判, 药品价格, 双目录, 创新药]
+    transmission: "集采压价 → 仿制药承压；医保支持创新 → 创新药受益"
+    beneficiaries:
+      - {industry: 创新药, logic: "医保向创新倾斜，谈判温和则利好"}
+      - {industry: 医疗器械(高端), logic: "国产替代+创新支持"}
+    losers:
+      - {industry: 仿制药, logic: "集采持续压价"}
+      - {industry: 中药(部分), logic: "纳入集采品种承压"}
+    historical_case: "集采常引发医药板块短期恐慌，但温和续约可能利好出尽反弹"
+    caveat: "集采对不同细分影响相反，不能笼统判断'医药利好/利空'"
+
+  # ── 军工 ─────────────────────────────────────────────
+  defense_budget:
+    name: 国防预算/地缘冲突
+    trigger_keywords: [国防, 军费, 军工, 地缘, 冲突, 台海, 装备]
+    transmission: "军费增长/地缘紧张 → 军工订单预期 + 风险偏好变化"
+    beneficiaries:
+      - {industry: 军工电子, logic: "信息化装备需求"}
+      - {industry: 航空装备, logic: "主战装备放量"}
+    losers: []
+    historical_case: "地缘事件常引发军工脉冲行情，但持续性取决于订单兑现"
+    caveat: "军工估值常年偏高，地缘炒作后回落快；要看实际订单和业绩"
+
+  # ── 资本市场改革 ─────────────────────────────────────
+  capital_market_reform:
+    name: 资本市场改革（注册制/退市/IPO节奏）
+    trigger_keywords: [注册制, 退市, IPO, 减持, 再融资, 投资者保护, 资本市场]
+    transmission: "IPO 收紧 → 存量资金集中；严格退市 → 壳价值消失、绩差股承压"
+    beneficiaries:
+      - {industry: 券商, logic: "改革活跃市场"}
+      - {industry: 优质龙头, logic: "资金向确定性集中"}
+    losers:
+      - {industry: 绩差小盘股, logic: "退市风险+壳价值消失"}
+    historical_case: "2024 退市新规，ST 和绩差股大幅承压"
+    caveat: "对小盘股是系统性利空；选股要规避退市风险标的"
+
+  # ── 大宗商品/资源 ────────────────────────────────────
+  commodity_supply:
+    name: 大宗商品供给/资源税/反内卷
+    trigger_keywords: [产能, 反内卷, 限产, 资源税, 供给侧, 涨价, 稀土, 煤炭]
+    transmission: "供给收缩/限产 → 商品涨价 → 资源类公司盈利改善"
+    beneficiaries:
+      - {industry: 有色金属, logic: "供给约束下涨价"}
+      - {industry: 煤炭, logic: "限产+高股息"}
+      - {industry: 钢铁, logic: "供给侧改革减产"}
+    losers:
+      - {industry: 中下游制造, logic: "原材料成本上升挤压利润"}
+    historical_case: "2016-2017 供给侧改革，周期股大牛市"
+    caveat: "区分'真实供给收缩'和'口头限产'；需求弱时涨价难持续"

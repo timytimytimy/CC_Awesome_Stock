@@ -59,6 +59,7 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
     - CFO/净利润 < 0.5（利润可能虚增）→ 单独提升风险扣分至少 -10
     - ROE 5 年内出现亏损年份 → 长期价值派路径直接排除
     - 扣非/净利润 < 0.7 → 主营盈利存疑，必须在反对意见中列出
+26. **【政策事件义务】**阶段 1/2 必须运行 `data/scripts/policy_track.py` 并读取 `data/events/policy/_recent.md`。报告 A/B 段必须列出近期"真信号级"政策事件及其影响行业。政策原文标 [事实]，传导链标 [推断]，涨跌预测标 [假设]；禁止把"政策利好"直接当买入信号。`kb/event-stock-mapping.yaml` 仅作参考先验，不得硬查表。
 
 ## 运行模式
 
