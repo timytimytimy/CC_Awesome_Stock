@@ -28,16 +28,35 @@ uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
 ```
 
-### 2. 验证数据脚本
+### 2. 建立个人配置
+
+真实配置不进 git。首次使用时复制 example 文件并按自己的资金、风险、能力圈修改：
+
+```bash
+cp config/personal-profile.example.yaml config/personal-profile.yaml
+cp config/circle-of-competence.example.yaml config/circle-of-competence.yaml
+
+# 检查仓位规则、止损线和默认值
+cd data
+python scripts/position_calc.py --check-profile
+```
+
+如果 `meta.owner` 为空，说明可能仍是模板默认值；报告会把仓位、止损和能力圈判断视为通用假设。
+
+### 3. 验证数据脚本
 
 ```bash
 cd data
 python scripts/snapshot_market.py
 python scripts/snapshot_stock.py 600519.SH
 python scripts/screen_sectors.py --top 5
+python scripts/snapshot_macro.py
+python scripts/snapshot_industry.py --top 10
+python scripts/financial_check.py 600519.SH
+python scripts/position_calc.py 600519.SH --pct 5
 ```
 
-### 3. 使用 Skill
+### 4. 使用 Skill
 
 在 Claude Code 中（项目目录下），直接对话：
 
@@ -47,7 +66,7 @@ python scripts/screen_sectors.py --top 5
 "AI 板块里挑几只中线标的"
 ```
 
-Skill 会自动按五阶段流程输出 A/B/C/D/E 结构化报告。
+Skill 会自动按五阶段流程输出结构化报告和执行信号表，包括：能不能动、怎么动、仓位上限、触发条件、止损/退出条件和最大反对理由。
 
 ## 知识库扩展
 
@@ -65,10 +84,16 @@ cp kb/authors/_template.md kb/authors/<slug>.md
 cp kb/cases/_template.md kb/cases/<ticker>-<event>-<YYYY-MM-DD>.md
 ```
 
-### 记录交易日记
+### 记录交易日志
 
 ```bash
-cp journal/_template.md journal/trades/YYYY-MM-DD-TICKER.md
+cp journal/trades/_template.md journal/trades/YYYY-MM-DD-TICKER.md
+```
+
+### 记录错题本
+
+```bash
+cp journal/lessons/_template.md journal/lessons/YYYY-MM-DD-short-title.md
 ```
 
 ## MVP 内容清单
@@ -80,14 +105,18 @@ cp journal/_template.md journal/trades/YYYY-MM-DD-TICKER.md
 - **散户实践者档案** (10个): 长期配置/ETF、A股短线情绪、泛财经/外盘映射三组
 - **Playbooks** (5个): 大盘判断/行业筛选/公司映射/买卖规则/风险检查
 - **Taxonomy** (3个 YAML): schools/themes/industry-mapping
-- **数据脚本** (5个): snapshot_market/snapshot_stock/screen_sectors/screen_by_criteria/find_similar_cases
-- **Skill** (.claude/skills/a-stock-analyst)
+- **真实数据分析层**: 宏观、行业基本面、公司财报、政策事件四条数据流
+- **个人化基础层**: 个人投资档案、能力圈、仓位换算、交易日志汇总、错题本
+- **数据脚本** (12个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases
+- **Skill**: `.claude/skills/a-stock-analyst/` 和 `.agents/skills/a-stock-analyst/` 双入口
 
 ### 待建（按优先级）
 
-- 数据层可信度：修复估值/公告接口，补齐 `tests/data/` 回归测试
-- 回测骨架：修复策略模板导入，定义第一版公共接口
-- 散户实践者层：补充 A 股财报拆解、可转债/低风险套利、长期公开复盘型普通投资者
+- 决策结构：`thesis card`、核心假设生命周期、机会成本对照、组合层约束
+- 候选股持续追踪：`watchlist/`、状态机、每日/每周触发器、持续追踪报告
+- 反人性护栏：FOMO/追高/亏损加仓检测，冷静期和过度交易约束
+- 数据可靠性：补齐新增宏观/行业/财报/政策/个人化脚本的回归测试
+- 回测骨架：定义第一版公共接口，加入防过拟合护栏
 
 ## 重要约束
 
