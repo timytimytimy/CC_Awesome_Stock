@@ -279,7 +279,8 @@ cd data && python scripts/financial_check.py <ticker>
 cd data && python scripts/snapshot_stock.py <ticker>
 
 # 3. 相似案例（journal/lessons + kb/cases）
-cd data && python scripts/find_similar_cases.py <ticker>
+#    必须传 --industry（阶段 3 已定性的行业），否则板块级案例（如医药集采）匹配不到
+cd data && python scripts/find_similar_cases.py <ticker> --industry <所属行业>
 ```
 
 **严禁**只看 PE/ROE 当前快照就判断公司质量。必须用 `financial_check.py` 输出的：

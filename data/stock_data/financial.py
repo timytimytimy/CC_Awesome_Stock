@@ -305,6 +305,24 @@ def comprehensive_check(ticker: str) -> dict:
     if summary.empty:
         return {"ticker": ticker, "error": "财报数据缺失"}
 
+    # 金融股检测：银行/券商/保险的财务摘要不含"销售毛利率"，
+    # 唐朝《手把手教你读财报》5 维框架（毛利率/CFO-净利润/扣非/流动比率）对其不适用。
+    if "gross_margin" not in summary.columns or summary["gross_margin"].dropna().empty:
+        return {
+            "ticker": ticker,
+            "not_applicable": True,
+            "latest_report": str(summary.iloc[0]["report_date"].date()),
+            "reason": (
+                "财务摘要缺少毛利率数据，判定为金融股（银行/券商/保险）。\n"
+                "  金融业无毛利率、无常规经营现金流概念，唐朝《手把手教你读财报》"
+                "5 维框架不适用，本工具不评分。\n"
+                "  建议改看专用指标：\n"
+                "  - 银行：ROE、不良贷款率、拨备覆盖率、核心一级资本充足率、净息差\n"
+                "  - 券商：ROE、净资本、风险覆盖率、自营/经纪收入结构\n"
+                "  - 保险：内含价值(EV)、新业务价值(NBV)、综合成本率、偿付能力充足率"
+            ),
+        }
+
     cf = get_cash_flow(ticker, periods=5)
     div = get_dividend_history(ticker)
 
@@ -409,7 +427,12 @@ def _check_profit_quality(summary: pd.DataFrame, cf: pd.DataFrame) -> tuple[floa
                     notes.append(f"❌ 经营现金流/净利润 = {avg:.2f}（远低于 1，利润可能虚增）")
 
     # A2. 毛利率稳定性（10 分）
-    gross_margins = summary["gross_margin"].dropna().head(5)
+    # 防御：金融股无 gross_margin 列（comprehensive_check 已前置拦截，此处双保险）
+    gross_margins = (
+        summary["gross_margin"].dropna().head(5)
+        if "gross_margin" in summary.columns
+        else pd.Series(dtype=float)
+    )
     if len(gross_margins) >= 3:
         avg_gm = gross_margins.mean()
         std_gm = gross_margins.std()

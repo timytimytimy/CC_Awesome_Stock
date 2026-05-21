@@ -41,6 +41,12 @@ def main():
     if "error" in check:
         print(f"❌ {check['error']}")
         return
+    if check.get("not_applicable"):
+        print("## 综合结论\n")
+        print(f"- **最新报告期**: {check['latest_report']}")
+        print(f"- **结论**: ⚠️ 本框架不适用（金融股）\n")
+        print(check["reason"])
+        return
 
     print(f"## 综合结论\n")
     print(f"- **最新报告期**: {check['latest_report']}")
