@@ -251,6 +251,77 @@
 - [ ] **数据源巡检**：定期跑 `data_health.py`，接口冻结早发现。
 - ~~tushare~~：免费版积分受限且有停运先例，对"免费优先"定位性价比低，保持可选。
 
+### P5.2 事件与新闻层（重写 2026-05-22 — 已读 5 个参考项目）
+
+> **目标**：把"政策/公告/业绩预告/海外映射/市场热点"从零散 WebSearch，升级为
+> 可归档、可评分、可映射到行业个股、可进 watchlist / prediction_log 的**事件层**。
+> 服务"宏观时事 → 大盘 → 产业链 → 公司"链路和"提前预测"——重点抓
+> **新鲜、可信、影响大、尚未充分定价**的事件。
+>
+> **三条原则（重写后新增）**：
+> 1. **复用优先于自建**——`Awesome-finance-skills` 是和本项目同格式的 skill 集合，
+>    能直接装就别重造。
+> 2. **合并优先于并行**——本项目已有 `policy_track.py`、`earnings_radar.py`、
+>    `kb/event-stock-mapping.yaml`，事件层是把它们**统一**，不是再起一摊。
+> 3. **验证优先于扩张**——先证明事件信号真能提升命中率，再扩；否则只是又一套
+>    "建好机器再看有没有用"。
+
+#### 参考项目调研结论（已读 README）
+
+- **Awesome-finance-skills**（RKiding）：⭐ 最有价值。是 SKILL.md 格式的 skill 集合，
+  含 `alphaear-news`（10+源新闻）`alphaear-sentiment`（情绪打分）
+  `alphaear-signal-tracker`（信号 强化/弱化/证伪——和本项目 watchlist 状态机同构）
+  `alphaear-logic-visualizer`（传导链图）。**这些可作兄弟 skill 直接评估复用。**
+- **daily_stock_analysis**（ZhuLinsen）：完整竞品系统。新闻搜索重度依赖**付费 API**
+  （SerpAPI/Tavily/Bocha）——违背"免费优先"。只借鉴概念：数据源优先级配置、
+  GitHub Actions 零成本定时、决策仪表盘式输出。**不接入。**
+- **FinnewsHunter**（DemonDamon）：企业级，Milvus+Redis+PostgreSQL+React+多 agent。
+  概念好（新闻=影响分析、多 agent 辩论=结构化反对），但**基建过重，纯当教材，不接入**。
+- **opennews / 事件知识图谱**：未找到明确轻量仓库；同 FinnewsHunter，知识图谱过重，**不做**。
+- **pywencai**（zsrl）：问财自然语言查询。⚠️ 现已**强制要 cookie + 需 Node.js + 低频否则被封**。
+  比预想脆弱——降为**可选兜底**，绝不作主干。
+
+#### Phase 0 · 先评估能否直接复用（动手前必做）
+
+- [ ] 实际安装/阅读 `Awesome-finance-skills` 的 `alphaear-news` / `alphaear-sentiment` /
+      `alphaear-signal-tracker`，评估：新闻源是否免费、质量如何、能否作兄弟 skill 共存。
+- [ ] 结论二选一：**能用就直接用**（P5.2 大幅缩水，只剩映射+接入）；
+      **不能用**再进 Phase 1 自建最小版。
+
+#### Phase 1 · 最小验证片（证明事件信号有用，再谈扩张）
+
+- [ ] 不建新模块。直接用 `policy_track.py` 已归档的政策事件 + `earnings_radar.py` 的业绩预告。
+- [ ] 写最简 `event_scoring`：先只算两维——`reliability`（官方>媒体>传闻）和
+      `priced_in`（相关行业/个股已暴涨或贴 52 周高 → 扣分）。`priced_in` 是为"提前"服务的核心维度。
+- [ ] 事件驱动的候选写入 `prediction_log` 时标注"event-driven"，跑数周后用 `stats`
+      对比：带事件信号的判断命中率是否真的更高。
+- [ ] **数据说有用 → 进 Phase 2；没用 → 停在这里**，不浪费精力建全套。
+
+#### Phase 2 · 事件→行业/个股映射 + 接入选股（Phase 1 通过才做）
+
+- [ ] **扩展**（不是新建）`kb/event-stock-mapping.yaml`：补主题关键词→行业→产业链→ETF/龙头。
+- [ ] 精简版 `EventRecord`：起步只 8 个字段
+      （`id/title/source/published_at/event_type/reliability/themes/tickers`），
+      打分字段等打分被证明有用再加。
+- [ ] `screen_all_market.py` 加 `event_score` 列——**与 `macro_fit`/`forecast_signal`
+      完全同一套加减项模式**，不能绕过财报/行业位置/能力圈/风险硬门。
+
+#### Phase 3 · 统一事件层 + 闭环（Phase 2 之后）
+
+- [ ] 把 `policy_track` / `earnings_radar` 收编进统一事件层，共用 `data/events/` 归档目录。
+- [ ] 扩展事件类型：海外映射、市场热点（问财兜底）。
+- [ ] A/B/C 档候选写 watchlist 时带关键事件 ID；`prediction_log` 统计哪类事件最有效
+      （政策/公告/业绩预告/海外映射/社交热点），把常误导的源写进 source-quality 降权。
+
+#### 明确不做
+
+- ❌ FinnewsHunter 式 Milvus/Redis/多 agent 重型基建。
+- ❌ daily_stock_analysis 式付费搜索 API（SerpAPI/Tavily/Bocha）。
+- ❌ opennews 式事件知识图谱。
+- ❌ 把 pywencai 作主干（cookie+Node.js+易封，仅可选兜底）。
+
+> **排序**：P5.2 在 P5.1 Layer 2（数据冗余）之后；本身分阶段，**Phase 1 不通过就不做 Phase 2/3**。
+
 ---
 
 ## P6：知识库补全（对照最初目标的遗留项）
