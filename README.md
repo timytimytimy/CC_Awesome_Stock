@@ -88,7 +88,18 @@ python scripts/financial_check.py 600519.SH
 python scripts/position_calc.py 600519.SH --pct 5
 ```
 
-### 4. 使用 Skill
+### 4. 每日数据预热（建议盘后跑）
+
+```bash
+cd data
+python scripts/refresh_data.py            # 全量预热（含全市场增强，约 30 分钟，可离开）
+python scripts/refresh_data.py --quick    # 只预热快数据（宏观/政策/大盘/行业/预告，约 1 分钟）
+```
+
+预热把慢的取数提前跑掉、灌满缓存——之后当天的 weekly_pick / 个股分析改为秒级读缓存，
+不必每次等 30 分钟。日志见 `data/.cache/refresh_<date>.log`。
+
+### 5. 使用 Skill
 
 在 Claude Code 中（项目目录下），直接对话：
 
@@ -146,8 +157,9 @@ cp journal/lessons/_template.md journal/lessons/YYYY-MM-DD-short-title.md
 - **反人性护栏**: `behavior_check.py` 检测追高/FOMO、反复改主意、连续亏损冷静期、过度交易、亏损加仓——散户亏钱主因是行为，决策前先把陷阱摆上台面
 - **真实数据分析层**: 宏观、行业基本面、公司财报、政策事件四条数据流
 - **个人化基础层**: 个人投资档案、能力圈、仓位换算、交易日志汇总、错题本
-- **数据脚本** (18个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases / earnings_radar / data_health / watchlist / prediction_log / behavior_check / cninfo_query
+- **数据脚本** (19个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases / earnings_radar / data_health / watchlist / prediction_log / behavior_check / cninfo_query / refresh_data
 - **官方披露源**: `cninfo_query.py` 直查巨潮资讯——公司概况/公告/招股说明书/监管函，财报公告以官方原始源为准
+- **数据预热**: `refresh_data.py` 盘后一次性预热阶段1-3 的慢数据，weekly_pick 改为秒级读缓存
 - **回归测试** (77项): 数据层、选股漏斗、系统闭环、领先信号、数据闸门、反人性护栏、官方披露源
 - **Skill**: `.claude/skills/a-stock-analyst/` 和 `.agents/skills/a-stock-analyst/` 双入口
 
