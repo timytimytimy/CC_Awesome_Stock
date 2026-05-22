@@ -17,3 +17,5 @@ journal/lessons/*.md
 config/personal-profile.yaml
 config/circle-of-competence.yaml
 !journal/lessons/_template.md
+watchlist/watchlist.yaml
+journal/predictions/predictions.csv

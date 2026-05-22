@@ -16,6 +16,7 @@ description: |
 1. **读取个人化配置**：`config/personal-profile.yaml`（资金/风险/仓位规则/禁区/成本）和 `config/circle-of-competence.yaml`（能力圈）。文件不存在则提示用户复制 example 建档；存在但 `meta.owner` 为空则提示可能仍是默认值。
 2. 读取 `journal/lessons/*.md` 全部教训（权重最高）
 3. 读取 `journal/trades/*.md` 了解当前持仓与历史交易（避免重复推荐已持有标的；可运行 `data/scripts/journal_summary.py` 看行为偏见汇总）
+3b. 读取观察池：运行 `data/scripts/watchlist.py list` 了解已在跟踪的标的（避免重复研究；优先处理已触发项），主动选股时不要重复推荐观察池里已有的标的
 4. **读取能力路由表** `kb/taxonomy/capability-matrix.yaml`：决定每个环节加载哪些视角。不再无脑全员交叉验证。
 5. 扫描 `kb/authors/*.md` frontmatter 中 `review_due` 字段，若有档案已过期则提示用户
 6. 确认本次分析周期（用户未指定时默认 `mid`）
@@ -56,6 +57,7 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 - **B5【搜索】** 禁止以"知识截止日期"为由省略搜索。今日催化剂、板块动态、每只候选股的最新公告必须先 WebSearch；搜不到标注 `[数据缺失-搜索无结果]`，不得用假设替代。
 - **B6【仓位换算】** A/B/C 档候选必跑 `position_calc.py`，把仓位上限换算成具体股数 + 金额 + 止损价。买不起一手/低于 min_order_amount/超 max_single_stock_pct → 标注"不可执行"并给替代方案。
 - **B7【个人化】** 所有报告基于 `personal-profile.yaml` 算仓位、止损、成本；止损用 `risk.stop_loss_*`，不得用通用默认值。配置缺失时显著位置提示"未建个人档案，以下为通用假设"。
+- **B8【判断留痕】** weekly_pick / deep_dive 出结论后，**每个 A/B/C 档候选和每个"放弃/规避"判断**都必须写入预测日志：`prediction_log.py log ...`（放弃也要记——只记成功候选会产生幸存者偏差）。每个 A/B/C 档候选还要写入观察池：`watchlist.py add ...`。这是系统能验证自己、能改进的前提。
 
 ### C 层 · 输出与质量规则
 
@@ -85,6 +87,14 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 | `quick_scan` | "大盘怎么看" / "现在什么主线" | 阶段 1→2，只给市场和方向 | 不使用 |
 | `weekly_pick` | "全市场选股" / "给我本周候选" / "主动推荐股票" | 阶段 1→5，产出分档候选 | 可使用，按功能/流派分工 |
 | `deep_dive` | "分析 600519.SH" / "这只怎么看" | 阶段 4→5，单股深度 | 可使用，按流派 lens 分工 |
+| `track` | "复查观察池" / "看看 watchlist" / "跟踪" / "有什么触发了吗" | 复查观察池 + 预测命中率，只报有变化的 | 不使用 |
+
+`track` 模式流程（轻量，不重新选股）：
+1. 运行 `data/scripts/watchlist.py check` —— 复查观察池现价/止损/复核日。
+2. 对每个"需要关注"的标的，判断其自由文本触发条件是否满足（需要时补 WebSearch）。
+3. 触发的 → 提示可执行 + 用 `watchlist.py update --state triggered`；证伪的 → `--state removed`。
+4. 运行 `data/scripts/prediction_log.py stats` 报告累计命中率。
+5. 输出"观察池跟踪简报"：只写有变化/需行动的，没变化的一句话带过。
 
 ## 五阶段执行流程
 
@@ -108,6 +118,7 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 | "分析 600519.SH" | 阶段 4 → 5（跳过 1-3）|
 | "我买了 XX，怎么看" | 阶段 4 → 5 + journal检查 |
 | "全市场选股" / "主动推荐股票" / "给我本周候选" | `weekly_pick`：阶段 1 → 5 完整流程 |
+| "复查观察池" / "看看 watchlist" / "有什么触发了吗" / "跟踪" | `track`：复查观察池 + 命中率，不重新选股 |
 
 ## 输出格式
 

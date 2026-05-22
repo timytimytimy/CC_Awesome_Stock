@@ -58,24 +58,50 @@ python scripts/screen_by_criteria.py --industry 801150 --min-roe 15
 - 801750: 计算机
 - 801880: 国防军工
 
-## screen_all_market.py（待实现优先入口）
+## screen_all_market.py（weekly_pick 全市场优先入口）
 
-**用途**: `weekly_pick` 模式的全市场第一层候选池。
+**用途**: `weekly_pick` 模式的全市场第一层候选池。初筛=纯流动性闸门（去动量化）。
 
 ```bash
-python scripts/screen_all_market.py --top 30
+python scripts/screen_all_market.py --enrich 0 --top 40 --lens composite  # 全量增强,首次约30分钟
+python scripts/screen_all_market.py --lens value     --top 30   # 切镜头秒级重排(复用缓存)
+python scripts/screen_all_market.py --lens reversal  --top 30
+python scripts/screen_all_market.py --lens growth    --top 30
 ```
 
-若该脚本不存在或运行失败，报告必须披露：候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py` 的主线行业代表公司筛选，不代表全 A 股穷尽扫描。
+四镜头：composite/value/growth/reversal；宏观联动自动生效（输出"宏观"列）。
+若该脚本运行失败，报告必须披露：候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py` 的主线行业代表公司筛选，不代表全 A 股穷尽扫描。
 
 ## find_similar_cases.py
 
-**用途**: 阶段 4，相似案例检索
+**用途**: 阶段 4，相似案例检索（精确命中 + 行业相关案例）
 
 ```bash
-python scripts/find_similar_cases.py 600519.SH
+python scripts/find_similar_cases.py 600519.SH --industry 白酒   # 必传 --industry
 python scripts/find_similar_cases.py --theme consumer-recovery
-python scripts/find_similar_cases.py --school contrarian --outcome failure
+python scripts/find_similar_cases.py --school contrarian-odds --outcome failure
+```
+
+## watchlist.py（观察池 · 系统闭环）
+
+**用途**: 把研究过的 A/B/C 档候选持续盯住（`track` 模式 + 阶段 5 收尾）。
+
+```bash
+python scripts/watchlist.py list      # 列出观察池
+python scripts/watchlist.py check     # 低成本复查：现价/止损/复核日，只报需关注的
+python scripts/watchlist.py add --ticker ... --name ... --tier B ...   # 阶段5写入
+python scripts/watchlist.py update --ticker ... --state triggered --note "..."
+```
+
+## prediction_log.py（预测日志 · 系统闭环）
+
+**用途**: 每个判断（含放弃）留痕，事后验证，统计命中率——让知识库可证伪。
+
+```bash
+python scripts/prediction_log.py log --ticker ... --tier B --signal 可小仓试错 ...  # 阶段5写入
+python scripts/prediction_log.py list [--pending|--validated]
+python scripts/prediction_log.py validate --id 3 --outcome correct --price 130
+python scripts/prediction_log.py stats     # 按档位/镜头/宏观状态看命中率
 ```
 
 ## 通用注意事项

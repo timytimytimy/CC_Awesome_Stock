@@ -436,3 +436,45 @@ E 段结论从 5 个枚举值之一选择：
 - C 档 `跟踪事件`：最多 5 只
 
 若没有候选股达标，输出：`本轮无候选通过过滤`。
+
+### 阶段 5 收尾 · 判断留痕（必做，约束 B8）
+
+报告产出后，**每个判断都要写进闭环**——这是系统能验证自己、能改进的前提：
+
+```bash
+cd data
+# 1. 每个 A/B/C 档候选 + 每个"放弃/规避"判断 → 预测日志（放弃也要记，否则幸存者偏差）
+python scripts/prediction_log.py log --ticker <代码> --name <名称> --tier <A/B/C/放弃> \
+    --signal <强观察/可小仓试错/等待验证/放弃/跟踪事件> --lens <镜头> --stock-type <类型> \
+    --thesis "<一句话逻辑>" --trigger "<触发条件>" --horizon 3-6mo \
+    --price <现价> --macro <信用周期> --source reports/<本报告>.md
+
+# 2. 每个 A/B/C 档候选 → 观察池（放弃的不进观察池）
+python scripts/watchlist.py add --ticker <代码> --name <名称> --tier <A/B/C> \
+    --stock-type <类型> --thesis "..." --trigger "..." --invalidation "..." \
+    --stop-loss <止损价> --price <现价> --macro <信用周期> \
+    --source reports/<本报告>.md --next-review <下次复核日,通常+1周>
+```
+
+报告末尾注明："本轮 N 个判断已写入预测日志，M 只候选已加入观察池。"
+
+## track 模式 · 观察池复查（不重新选股）
+
+用户说"复查观察池 / 看看 watchlist / 有什么触发了吗 / 跟踪"时进入。轻量流程：
+
+```bash
+cd data
+python scripts/watchlist.py check          # 复查现价/止损/复核日，只报需关注的
+python scripts/prediction_log.py stats     # 累计命中率（按档位/镜头/宏观状态）
+```
+
+1. 对 `check` 列出的每个"需要关注"标的，判断其自由文本触发条件是否真的满足
+   （触发条件是文本，脚本只给现价；满足与否需要你判断，必要时补 WebSearch）。
+2. 触发成立 → 提示"可执行"，`watchlist.py update --ticker X --state triggered --note "..."`。
+3. 证伪/失效 → `watchlist.py update --ticker X --state removed --note "..."`，
+   并去预测日志 `validate` 对应记录。
+4. 止损击穿 / 复核日到 → 在简报里显式提示。
+5. 输出"观察池跟踪简报"：**只写有变化、需行动的**；没变化的标的一句话带过，不展开。
+
+> track 模式是低成本高频动作（可每日/每周跑），与 weekly_pick 的重度选股分开。
+> 它把"研究过的标的"持续盯住——研究成果不再每轮被扔掉、触发不再被漏。
