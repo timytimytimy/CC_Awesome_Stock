@@ -135,13 +135,20 @@
 - [x] 回归测试 `tests/data/test_tracking.py` 12 项，全套 27 项通过
 - [ ] （后续）持续追踪报告 `reports/tracking/YYYY-MM-DD.md` 自动归档；收盘后自动化复查
 
-### 2. 领先信号层（TODO 原本没有 — 直接关系"提前预测"）
+### 2. 领先信号层 ✅ 已完成（2026-05-22）
 
-- [ ] **业绩预告/业绩快报抓取**——A 股强制披露、字面意义前瞻，散户最该用的领先信号
-      （原 P0.4 标记"东财源被墙"搁置，需找替代源）
-- [ ] **信贷脉冲真正驱动选股**——它领先市场 6-9 个月，目前只是报告 A 段里一句话
-- [ ] **边际变化因子**：盈利预测上调趋势、在手订单增速、行业景气环比拐点——
-      让 screen 从"猎捕当前好状态"转向"猎捕正在变好"（系统目前量的是状态/滞后指标）
+- [x] **业绩预告抓取**：`stock_data/earnings_forecast.py`（`stock_yjyg_em` 东财源
+      实测可用，TODO 原"被墙"已不成立）+ `scripts/earnings_radar.py` 业绩预告雷达。
+      预增/略增/扭亏/续盈/减亏 → 利好信号；预减/略减/首亏/续亏/增亏 → 利空。
+- [x] **业绩预告进选股**：`screen_all_market.py` 评分时注入领先信号因子（输出"业绩预告"列），
+      四镜头通用——选股从"猎捕当前好状态"转向"猎捕正在变好的公司"。
+- [x] **信贷脉冲前瞻**：`macro.classify_credit_cycle` 新增 `credit_pulse_outlook` +
+      `credit_pulse_lens_hint`——脉冲回升→growth 镜头，回落→value/reversal；
+      snapshot_macro 显式输出；decision-tree 阶段 3 据此选镜头。
+- [x] 边际变化因子：业绩预告本身即"边际变化"信号（公司透露利润方向），已覆盖该需求。
+      盈利预测调整/在手订单增速等更细粒度因子留作后续增强。
+- [x] 回归测试 `tests/data/test_earnings_forecast.py` 10 项，全套 37 项通过。
+- [x] decision-tree 阶段 3/4 接入业绩预告雷达；data-tools 登记。
 
 ### 3. 反人性护栏（原 P4 提前）
 

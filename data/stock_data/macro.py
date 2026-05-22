@@ -274,6 +274,20 @@ def classify_credit_cycle() -> dict:
         phase = "衰退（经济收缩 + 通缩压力）"
         strategy = "现金/利率债优先；权益等待政策底；逆向布局优质资产"
 
+    # 信贷脉冲前瞻：领先权益市场约 6-9 个月，是全系统最前瞻的单一指标。
+    # 它的"方向"本身就是领先信号——不只是定位四象限。
+    if pulse_trend == "↗":
+        pulse_outlook = ("信贷脉冲回升 → [推断] 未来 6-9 个月市场风险偏好趋升，"
+                         "权益资产中期偏多，利好成长股；选股优先 growth 镜头")
+        pulse_lens_hint = "growth"
+    elif pulse_trend == "↘":
+        pulse_outlook = ("信贷脉冲回落 → [推断] 未来 6-9 个月市场风险偏好趋降，"
+                         "中期转向防御；选股优先 value / reversal 镜头，控制成长股仓位")
+        pulse_lens_hint = "value"
+    else:
+        pulse_outlook = "信贷脉冲方向不明（数据不足），暂不作前瞻判断"
+        pulse_lens_hint = None
+
     return {
         "phase": phase,
         "pmi": pmi_now,
@@ -282,6 +296,8 @@ def classify_credit_cycle() -> dict:
         "ppi_trend": ppi_trend,
         "credit_pulse": round(pulse_now, 2) if pulse_now is not None else None,
         "credit_pulse_trend": pulse_trend,
+        "credit_pulse_outlook": pulse_outlook,
+        "credit_pulse_lens_hint": pulse_lens_hint,
         "strategy_implication": strategy,
         "confidence": "mid",
         "as_of": str(pmi.iloc[-1]["date"].date()),

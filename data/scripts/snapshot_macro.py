@@ -126,6 +126,7 @@ def main():
           f"PPI同比={cycle.get('ppi_yoy', 0):+.2f}% ({cycle.get('ppi_trend')}) | "
           f"信贷脉冲={cycle.get('credit_pulse')} ({cycle.get('credit_pulse_trend')})")
     print(f"- **策略含义** [推断]: {cycle.get('strategy_implication')}")
+    print(f"- **信贷脉冲前瞻**: {cycle.get('credit_pulse_outlook', 'N/A')}")
     print(f"- **数据时间**: {cycle.get('as_of')} | 置信度: {cycle.get('confidence')}")
     print()
 

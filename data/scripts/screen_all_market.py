@@ -34,6 +34,7 @@ from stock_data.macro_industry import (
     get_stock_sw_industry,
     save_industry_cache,
 )
+from stock_data.earnings_forecast import get_forecast_map
 
 
 CACHE_DIR = Path(__file__).resolve().parents[1] / ".cache"
@@ -112,15 +113,22 @@ def main():
         print("本轮无候选通过过滤")
         return
 
-    # ── 4. 多镜头评分 + 排序 ─────────────────────────────────
+    # ── 4. 领先信号（业绩预告）+ 多镜头评分 + 排序 ───────────
+    # 业绩预告在评分时注入：是对全市场预告数据的查表，不需逐股网络调用，
+    # 因此缓存因子（含后台旧缓存）也能用上最新预告。
+    forecast_map = get_forecast_map()
     scored = []
     for f in factors:
         rec = dict(f)
+        fc = forecast_map.get(f["ticker"], {})
+        rec["forecast_type"] = fc.get("forecast_type", "")
+        rec["forecast_signal"] = fc.get("signal", 0.0)
+        rec["forecast_direction"] = fc.get("direction", "")
         for lens in LENSES:
-            s, reasons = score_lens(f, lens)
+            s, reasons = score_lens(rec, lens)
             rec[f"score_{lens}"] = round(s, 1)
             if lens == args.lens:
-                rec["reason"] = "、".join(reasons[:4]) if reasons else "因子中性"
+                rec["reason"] = "、".join(reasons[:5]) if reasons else "因子中性"
         scored.append(rec)
 
     result = pd.DataFrame(scored).sort_values(
@@ -333,7 +341,7 @@ def _score_composite(f: dict) -> tuple[float, list[str]]:
     if debt is not None and debt > 75:
         score -= 5; reasons.append("负债率偏高")
 
-    score, reasons = _apply_macro(score, reasons, f)
+    score, reasons = _apply_signals(score, reasons, f)
     return score, reasons
 
 
@@ -399,7 +407,7 @@ def _score_value(f: dict) -> tuple[float, list[str]]:
     elif trend == "uptrend":
         score += 2
 
-    score, reasons = _apply_macro(score, reasons, f)
+    score, reasons = _apply_signals(score, reasons, f)
     return score, reasons
 
 
@@ -456,7 +464,7 @@ def _score_growth(f: dict) -> tuple[float, list[str]]:
         elif disc <= -45:
             score -= 5; reasons.append("破位深跌(成长逻辑存疑)")
 
-    score, reasons = _apply_macro(score, reasons, f)
+    score, reasons = _apply_signals(score, reasons, f)
     return score, reasons
 
 
@@ -513,7 +521,7 @@ def _score_reversal(f: dict) -> tuple[float, list[str]]:
     if debt is not None and debt > 80:
         score -= 12; reasons.append("高杠杆(财务困境风险)")
 
-    score, reasons = _apply_macro(score, reasons, f)
+    score, reasons = _apply_signals(score, reasons, f)
     return score, reasons
 
 
@@ -523,6 +531,23 @@ def _apply_macro(score: float, reasons: list[str], f: dict) -> tuple[float, list
         score += macro_fit
         ind = f.get("sw_industry") or "行业"
         reasons.append(f"宏观{'顺风' if macro_fit > 0 else '逆风'}({ind}{macro_fit:+.0f})")
+    return score, reasons
+
+
+def _apply_forecast(score: float, reasons: list[str], f: dict) -> tuple[float, list[str]]:
+    """领先信号：业绩预告——公司在正式财报前已说出利润方向。"""
+    sig = _num(f.get("forecast_signal"), 0.0)
+    if sig and abs(sig) >= 2:
+        score += sig
+        ft = f.get("forecast_type") or "预告"
+        reasons.append(f"业绩预告·{ft}({sig:+.0f})")
+    return score, reasons
+
+
+def _apply_signals(score: float, reasons: list[str], f: dict) -> tuple[float, list[str]]:
+    """统一收尾：宏观联动 + 领先信号。"""
+    score, reasons = _apply_macro(score, reasons, f)
+    score, reasons = _apply_forecast(score, reasons, f)
     return score, reasons
 
 
@@ -546,21 +571,27 @@ def _print_report(result, args, as_of, source, universe_count, gate_count,
     print()
 
     print("| 排名 | 股票 | 名称 | 行业 | {lens}分 | 综合分 | 涨跌幅 | 成交额(亿) | "
-          "距52周高 | 趋势 | RPS63 | PE分位 | ROE | 净利率 | 宏观 | 主要理由 |"
+          "距52周高 | 趋势 | RPS63 | PE分位 | ROE | 净利率 | 宏观 | 业绩预告 | 主要理由 |"
           .format(lens=args.lens))
-    print("|---:|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---|")
+    print("|---:|---|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---|---|")
     for idx, row in result.iterrows():
         disc = row.get("discount_52w")
         disc_str = f"{disc:.1f}%" if disc is not None and not pd.isna(disc) else "N/A"
         mf = _num(row.get("macro_fit"), 0.0)
+        ft = row.get("forecast_type")
+        ft = "" if (ft is None or (isinstance(ft, float) and pd.isna(ft))) else str(ft)
+        fsig = _num(row.get("forecast_signal"), 0.0)
+        fc_str = f"{ft}({fsig:+.0f})" if ft else "—"
+        ind = row.get("sw_industry")
+        ind = "—" if (ind is None or (isinstance(ind, float) and pd.isna(ind)) or ind == "") else str(ind)
         print(
             "| {rank} | {ticker} | {name} | {ind} | {lscore:.1f} | {cscore:.1f} | "
             "{change:.2f}% | {amount:.1f} | {disc} | {trend} | {rps63} | {pe_pct} | "
-            "{roe} | {margin} | {mf:+.0f} | {reason} |".format(
+            "{roe} | {margin} | {mf:+.0f} | {fc} | {reason} |".format(
                 rank=idx + 1,
                 ticker=row["ticker"],
                 name=row["name"],
-                ind=row.get("sw_industry") or "—",
+                ind=ind,
                 lscore=row[f"score_{args.lens}"],
                 cscore=row["score_composite"],
                 change=row["change_pct"],
@@ -572,14 +603,16 @@ def _print_report(result, args, as_of, source, universe_count, gate_count,
                 roe=format_optional(row.get("roe")),
                 margin=format_optional(row.get("net_margin")),
                 mf=mf,
+                fc=fc_str,
                 reason=row.get("reason", ""),
             )
         )
 
     print("\n> [事实] 快照来自 akshare，增强指标来自本地 stock_data 工具。")
-    print("> [推断] 初筛=纯流动性闸门，无当日动量偏向；增强阶段做估值/趋势/财务/宏观多因子评分。")
+    print("> [推断] 初筛=纯流动性闸门，无当日动量偏向；增强阶段做估值/趋势/财务/宏观/领先信号多因子评分。")
     print(f"> [推断] 当前以 **{args.lens}** 镜头排序；同一批因子可切换 value/growth/reversal 重排。")
-    print("> [推断] 宏观联动：信用周期+PPI → 所属行业加减分（见 kb/taxonomy/macro-industry-mapping.yaml）。")
+    print("> [推断] 宏观联动：信用周期+PPI → 所属行业加减分（kb/taxonomy/macro-industry-mapping.yaml）。")
+    print("> [推断] 领先信号：业绩预告（预增/扭亏/首亏等）—— 公司在正式财报前已透露利润方向。")
     print("> [提示] 得分用于候选排序，不等同于买入建议；仍需公告、新闻、风险检查二次确认。")
 
 

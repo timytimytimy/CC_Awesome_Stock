@@ -207,11 +207,27 @@ cd data && python scripts/screen_all_market.py --lens reversal  --top 30   # 困
 cd data && python scripts/screen_all_market.py --lens growth    --top 30   # 趋势成长
 ```
 
-镜头选择对接能力路由表：过热/衰退期优先看 `value`/`reversal`，复苏期优先 `growth`。
+镜头选择对接能力路由表 + **阶段 1 的信贷脉冲前瞻**：
+- 信贷脉冲回升（`credit_pulse_lens_hint=growth`）→ 优先 `growth` 镜头
+- 信贷脉冲回落（`credit_pulse_lens_hint=value`）→ 优先 `value`/`reversal` 镜头
+- 过热/衰退期也优先 `value`/`reversal`，复苏期优先 `growth`
+
 不同镜头捞出的候选不同——这是为了不被单一动量综合分漏掉机会。
 
-`screen_all_market.py` 已内置宏观联动：阶段 1 的信用周期 + PPI 方向自动转成所属行业
-加减分（`kb/taxonomy/macro-industry-mapping.yaml`），输出表的"宏观"列即为该调整。
+`screen_all_market.py` 已内置两层信号：
+- **宏观联动**：阶段 1 的信用周期 + PPI → 所属行业加减分（输出"宏观"列）
+- **领先信号**：业绩预告（预增/扭亏/首亏等）→ 个股加减分（输出"业绩预告"列）——
+  这让选股从"猎捕当前好状态"转向"猎捕正在变好的公司"。
+
+**业绩预告雷达（领先信号，必看）**：
+
+```bash
+cd data && python scripts/earnings_radar.py --top 30           # 最强利好预告
+cd data && python scripts/earnings_radar.py --negative --top 20 # 利空预告(风险预警)
+```
+
+业绩预告是 A 股强制披露、字面意义前瞻的信号——公司在正式财报前已说出利润方向。
+候选股若同时出现在利好预告榜，是强力的"提前"加分项；若在利空榜，必须列入反对理由。
 
 若不存在该脚本，必须在报告中披露：
 
@@ -299,7 +315,15 @@ cd data && python scripts/snapshot_stock.py <ticker>
 # 3. 相似案例（journal/lessons + kb/cases）
 #    必须传 --industry（阶段 3 已定性的行业），否则板块级案例（如医药集采）匹配不到
 cd data && python scripts/find_similar_cases.py <ticker> --industry <所属行业>
+
+# 4. 业绩预告（领先信号）—— 查该股是否已透露利润方向
+cd data && python scripts/earnings_radar.py --top 60 | grep <ticker或名称>   # 在利好榜?
+cd data && python scripts/earnings_radar.py --negative --top 60 | grep <ticker或名称>  # 在利空榜?
 ```
+
+**业绩预告是高优先级前瞻证据**：它是官方强制披露、且在正式财报之前——
+若该股有"预增/扭亏"，是支持论文的强力前瞻证据（写入 Evidence Table，标 [事实]）；
+若有"预减/首亏"，必须列入反对理由并提升风险扣分。无预告则说明无强制披露级变动。
 
 **严禁**只看 PE/ROE 当前快照就判断公司质量。必须用 `financial_check.py` 输出的：
 - **总分及结论**（健康 / 尚可 / 警惕 / 回避）

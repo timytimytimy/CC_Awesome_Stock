@@ -69,8 +69,18 @@ python scripts/screen_all_market.py --lens reversal  --top 30
 python scripts/screen_all_market.py --lens growth    --top 30
 ```
 
-四镜头：composite/value/growth/reversal；宏观联动自动生效（输出"宏观"列）。
+四镜头：composite/value/growth/reversal；宏观联动 + 业绩预告领先信号自动生效（输出"宏观""业绩预告"列）。
 若该脚本运行失败，报告必须披露：候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py` 的主线行业代表公司筛选，不代表全 A 股穷尽扫描。
+
+## earnings_radar.py（业绩预告雷达 · 领先信号）
+
+**用途**: 阶段 2/3，扫描当期业绩预告——A 股强制披露、字面意义前瞻的信号。
+
+```bash
+python scripts/earnings_radar.py --top 30            # 最强利好预告（预增/扭亏）
+python scripts/earnings_radar.py --negative --top 20 # 利空预告（首亏/预减，风险预警）
+python scripts/earnings_radar.py --period 20260630   # 指定报告期
+```
 
 ## find_similar_cases.py
 
