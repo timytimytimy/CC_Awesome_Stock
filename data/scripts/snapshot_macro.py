@@ -14,7 +14,7 @@ from datetime import date
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from stock_data.macro import (
-    get_pmi, get_ppi, get_cpi, get_m2, get_social_financing,
+    get_pmi, get_ppi, get_cpi, get_m2, get_new_credit,
     get_treasury_yields, get_credit_pulse, get_fed_rate,
     classify_credit_cycle, market_temperature,
 )
@@ -71,9 +71,9 @@ def main():
     print()
 
     # ── 2. 流动性 ─────────────────────────────────────
-    print("## 2. 流动性（M2 / 社融 / 信贷脉冲）\n")
+    print("## 2. 流动性（M2 / 新增信贷 / 信贷脉冲）\n")
     m2 = get_m2(periods=6)
-    sf = get_social_financing(periods=12)
+    sf = get_new_credit(periods=12)
     pulse = get_credit_pulse()
 
     if not m2.empty:
@@ -85,9 +85,9 @@ def main():
     if not sf.empty:
         latest = sf.iloc[-1]
         tag = freshness_tag("macro_monthly", latest["date"])
-        print(f"- **社融最新月**: {latest['social_financing']:.0f} 亿（{latest['date'].strftime('%Y-%m')}）"
-              f" | 含人民币贷款 {latest['rmb_loan']:.0f} 亿 | {tag}")
-        print(f"  - 近 6 月社融: {' → '.join(f'{x:.0f}' for x in sf['social_financing'].tail(6))} (亿)")
+        print(f"- **新增人民币贷款**: {latest['new_credit']:.0f} 亿（{latest['date'].strftime('%Y-%m')}）"
+              f" | {tag}")
+        print(f"  - 近 6 月新增信贷: {' → '.join(f'{x:.0f}' for x in sf['new_credit'].tail(6))} (亿)")
 
     if not pulse.empty:
         latest_pulse = pulse.iloc[-1]

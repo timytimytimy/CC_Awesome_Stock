@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from stock_data.macro import (
-    get_pmi, get_ppi, get_cpi, get_m2, get_social_financing,
+    get_pmi, get_ppi, get_cpi, get_m2, get_new_credit,
     get_credit_pulse, get_treasury_yields, get_fed_rate,
 )
 from stock_data.market import get_northbound_flow
@@ -64,7 +64,7 @@ def main():
         checks.append(("PPI 同比", "macro_monthly", _latest_date(get_ppi(periods=3))))
         checks.append(("CPI 同比", "macro_monthly", _latest_date(get_cpi(periods=3))))
         checks.append(("M2 同比", "macro_monthly", _latest_date(get_m2(periods=3))))
-        checks.append(("社融", "macro_monthly", _latest_date(get_social_financing(periods=3))))
+        checks.append(("新增信贷", "macro_monthly", _latest_date(get_new_credit(periods=3))))
         checks.append(("信贷脉冲", "macro_monthly", _latest_date(get_credit_pulse())))
         checks.append(("中国国债收益率", "market_daily", _latest_date(get_treasury_yields(periods=10))))
         checks.append(("美联储利率", "fed_rate", _latest_date(get_fed_rate(periods=3))))
@@ -91,7 +91,9 @@ def main():
     nb_note = None
     try:
         nb = get_northbound_flow(5)
-        if nb.get("error"):
+        if nb.get("discontinued"):
+            nb_note = f"⚠️ 北上资金：已停止披露（{nb.get('note', '2024-08 起')}）—— 非系统故障，不可用"
+        elif nb.get("error"):
             nb_note = "❌ 北上资金：数据获取失败"
         else:
             total = nb.get("total_5d")

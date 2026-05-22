@@ -112,17 +112,29 @@ def get_sector_performance(top_n: int = 10, period_days: int = 5) -> pd.DataFram
 
 
 def get_northbound_flow(days: int = 5) -> dict:
-    """北上资金近 N 日净流入（亿元）"""
+    """
+    北上资金近 N 日净流入（亿元）。
+
+    注：沪深交易所自 2024 年 8 月起停止披露北向资金实时/每日净买额，
+    该数据已永久不可用。返回结果会带 discontinued 标记，调用方不应把 0 当真实读数。
+    """
     import akshare as ak
     try:
         df = ak.stock_hsgt_hist_em(symbol="北向资金")
         if df is None or df.empty:
-            return {"total_5d": None, "error": "empty"}
+            return {"total_5d": None, "error": "empty",
+                    "discontinued": True,
+                    "note": "北向资金实时净额自 2024-08 起停止披露"}
         df = df.sort_values(df.columns[0], ascending=False).head(days)
         flow_col = [c for c in df.columns if "净" in c or "flow" in c.lower()]
         if not flow_col:
             return {"total_5d": None, "error": "column not found"}
         total = float(df[flow_col[0]].sum())
+        # 全部为 0 → 数据源已停更（不是真实"零流入"）
+        if total == 0.0:
+            return {"total_5d": None, "error": "discontinued",
+                    "discontinued": True,
+                    "note": "北向资金实时净额自 2024-08 起停止披露，返回值恒为 0"}
         return {"total_5d": round(total, 2), "days": days}
     except Exception as e:
         print(f"[WARN] northbound_flow: {e}", file=sys.stderr)

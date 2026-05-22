@@ -102,15 +102,20 @@ def get_ppi(periods: int = 12) -> pd.DataFrame:
 
 
 def get_cpi(periods: int = 12) -> pd.DataFrame:
-    """CPI 同比增长。返回 date, cpi_yoy"""
+    """
+    CPI 同比增长（国家统计局源 macro_china_cpi）。返回 date, cpi_yoy
+
+    注：原用 macro_china_cpi_monthly（金十日历源）已冻结在 2025-08，
+    且它返回的是月率(环比)却被当作同比——双重错误。改用统计局源的同比口径。
+    """
     cached = _cache_get("cpi", ttl_hours=24 * 7)
     if cached is not None:
         return cached.tail(periods).reset_index(drop=True)
     import akshare as ak
     try:
-        df = ak.macro_china_cpi_monthly()
-        df["date"] = pd.to_datetime(df["日期"])
-        df["cpi_yoy"] = pd.to_numeric(df["今值"], errors="coerce")
+        df = ak.macro_china_cpi()
+        df["date"] = df["月份"].map(_parse_chinese_month)
+        df["cpi_yoy"] = pd.to_numeric(df["全国-同比增长"], errors="coerce")
         df = df.dropna(subset=["date", "cpi_yoy"]).sort_values("date")
         out = df[["date", "cpi_yoy"]].reset_index(drop=True)
         _cache_put("cpi", out)
@@ -121,15 +126,19 @@ def get_cpi(periods: int = 12) -> pd.DataFrame:
 
 
 def get_m2(periods: int = 12) -> pd.DataFrame:
-    """M2 同比增速。返回 date, m2_yoy"""
+    """
+    M2 同比增速（国家统计局货币供应量 macro_china_money_supply）。返回 date, m2_yoy
+
+    注：原用 macro_china_m2_yearly（金十日历源）已冻结在 2025-08。
+    """
     cached = _cache_get("m2", ttl_hours=24 * 7)
     if cached is not None:
         return cached.tail(periods).reset_index(drop=True)
     import akshare as ak
     try:
-        df = ak.macro_china_m2_yearly()
-        df["date"] = pd.to_datetime(df["日期"])
-        df["m2_yoy"] = pd.to_numeric(df["今值"], errors="coerce")
+        df = ak.macro_china_money_supply()
+        df["date"] = df["月份"].map(_parse_chinese_month)
+        df["m2_yoy"] = pd.to_numeric(df["货币和准货币(M2)-同比增长"], errors="coerce")
         df = df.dropna(subset=["date", "m2_yoy"]).sort_values("date")
         out = df[["date", "m2_yoy"]].reset_index(drop=True)
         _cache_put("m2", out)
@@ -139,31 +148,29 @@ def get_m2(periods: int = 12) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def get_social_financing(periods: int = 24) -> pd.DataFrame:
+def get_new_credit(periods: int = 24) -> pd.DataFrame:
     """
-    社会融资规模（亿元）。
-    返回：date, social_financing（社融增量）, rmb_loan（人民币贷款增量）
+    新增人民币贷款（当月增量，亿元）—— 国家统计局源 macro_china_new_financial_credit，
+    当期更新（实测到 2026-04）。返回：date, new_credit
+
+    注：原 get_social_financing 用 macro_china_shrzgm（社会融资规模），该接口已冻结
+    在 2025-12。社融（广义）暂无当期 akshare 源，改用新增人民币贷款——它是社融的
+    核心主体、央行每月公布、口径稳定，作为信贷脉冲基础是合理且诚实的替代。
     """
-    cached = _cache_get("shrzgm", ttl_hours=24 * 7)
+    cached = _cache_get("new_credit", ttl_hours=24 * 7)
     if cached is not None:
         return cached.tail(periods).reset_index(drop=True)
     import akshare as ak
     try:
-        df = ak.macro_china_shrzgm()
-        # 月份格式：202510 表示 2025-10
-        df["date"] = pd.to_datetime(df["月份"].astype(str), format="%Y%m")
-        df = df.rename(columns={
-            "社会融资规模增量": "social_financing",
-            "其中-人民币贷款": "rmb_loan",
-        })
-        df["social_financing"] = pd.to_numeric(df["social_financing"], errors="coerce")
-        df["rmb_loan"] = pd.to_numeric(df["rmb_loan"], errors="coerce")
-        df = df.dropna(subset=["date"]).sort_values("date")
-        out = df[["date", "social_financing", "rmb_loan"]].reset_index(drop=True)
-        _cache_put("shrzgm", out)
+        df = ak.macro_china_new_financial_credit()
+        df["date"] = df["月份"].map(_parse_chinese_month)
+        df["new_credit"] = pd.to_numeric(df["当月"], errors="coerce")
+        df = df.dropna(subset=["date", "new_credit"]).sort_values("date")
+        out = df[["date", "new_credit"]].reset_index(drop=True)
+        _cache_put("new_credit", out)
         return out.tail(periods).reset_index(drop=True)
     except Exception as e:
-        print(f"[WARN] shrzgm: {e}", file=sys.stderr)
+        print(f"[WARN] new_credit: {e}", file=sys.stderr)
         return pd.DataFrame()
 
 
@@ -219,15 +226,18 @@ def get_fed_rate(periods: int = 12) -> pd.DataFrame:
 def get_credit_pulse(window_months: int = 12) -> pd.DataFrame:
     """
     信贷脉冲（高善文核心领先指标）。
-    定义：社融增量的滚动 N 月之和的同比变化率。
+    定义：新增人民币贷款的滚动 N 月之和的同比变化率。
     正值 = 信用扩张加速，负值 = 信用收缩加速。
     领先权益市场约 6-9 个月。
+
+    注：原基于社融（macro_china_shrzgm）；该接口冻结后改用新增人民币贷款
+    （get_new_credit），口径略窄但当期更新，仍是有效的信用脉冲基础。
     """
-    sf = get_social_financing(periods=60)
+    sf = get_new_credit(periods=60)
     if sf.empty or len(sf) < window_months * 2:
         return pd.DataFrame()
     sf = sf.copy()
-    sf["roll"] = sf["social_financing"].rolling(window_months).sum()
+    sf["roll"] = sf["new_credit"].rolling(window_months).sum()
     sf["credit_pulse"] = sf["roll"].pct_change(window_months) * 100
     return sf[["date", "credit_pulse"]].dropna().reset_index(drop=True)
 
@@ -387,7 +397,7 @@ def get_macro_snapshot() -> dict:
         "ppi": get_ppi(periods=6).to_dict("records"),
         "cpi": get_cpi(periods=6).to_dict("records"),
         "m2": get_m2(periods=6).to_dict("records"),
-        "social_financing": get_social_financing(periods=6).to_dict("records"),
+        "new_credit": get_new_credit(periods=6).to_dict("records"),
         "treasury": get_treasury_yields(periods=20).to_dict("records"),
         "credit_pulse": get_credit_pulse().tail(6).to_dict("records"),
         "credit_cycle": classify_credit_cycle(),
