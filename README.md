@@ -114,16 +114,18 @@ cp journal/lessons/_template.md journal/lessons/YYYY-MM-DD-short-title.md
 - **反人性护栏**: `behavior_check.py` 检测追高/FOMO、反复改主意、连续亏损冷静期、过度交易、亏损加仓——散户亏钱主因是行为，决策前先把陷阱摆上台面
 - **真实数据分析层**: 宏观、行业基本面、公司财报、政策事件四条数据流
 - **个人化基础层**: 个人投资档案、能力圈、仓位换算、交易日志汇总、错题本
-- **数据脚本** (12个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases
+- **数据脚本** (17个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases / earnings_radar / data_health / watchlist / prediction_log / behavior_check
+- **回归测试** (67项): 数据层、选股漏斗、系统闭环、领先信号、数据闸门、反人性护栏
 - **Skill**: `.claude/skills/a-stock-analyst/` 和 `.agents/skills/a-stock-analyst/` 双入口
 
 ### 待建（按优先级）
 
-- 决策结构：`thesis card`、核心假设生命周期、机会成本对照、组合层约束
-- 候选股持续追踪：`watchlist/`、状态机、每日/每周触发器、持续追踪报告
-- 反人性护栏：FOMO/追高/亏损加仓检测，冷静期和过度交易约束
-- 数据可靠性：补齐新增宏观/行业/财报/政策/个人化脚本的回归测试
-- 回测骨架：定义第一版公共接口，加入防过拟合护栏
+- 决策结构：`thesis card`、核心假设生命周期、机会成本对照、组合层约束（TODO P2）
+- 持续追踪自动化：`reports/tracking/` 自动归档、收盘后定时复查 watchlist
+- 美联储利率数据源修复（akshare 接口冻结，闸门已能识别降级）
+- 领先信号增强：盈利预测调整趋势、在手订单增速等更细粒度边际因子
+- 回测骨架：定义第一版公共接口，加入防过拟合护栏（TODO P5）
+- 知识库补全：更多典型案例、失败案例
 
 ## 重要约束
 
