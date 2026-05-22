@@ -17,6 +17,7 @@ description: |
 2. 读取 `journal/lessons/*.md` 全部教训（权重最高）
 3. 读取 `journal/trades/*.md` 了解当前持仓与历史交易（避免重复推荐已持有标的；可运行 `data/scripts/journal_summary.py` 看行为偏见汇总）
 3b. 读取观察池：运行 `data/scripts/watchlist.py list` 了解已在跟踪的标的（避免重复研究；优先处理已触发项），主动选股时不要重复推荐观察池里已有的标的
+3c. 行为状态自检：运行 `data/scripts/behavior_check.py` 了解当前是否处于过度交易/连续亏损冷静期/持有期过短等行为高危状态
 4. **读取能力路由表** `kb/taxonomy/capability-matrix.yaml`：决定每个环节加载哪些视角。不再无脑全员交叉验证。
 5. 扫描 `kb/authors/*.md` frontmatter 中 `review_due` 字段，若有档案已过期则提示用户
 6. 确认本次分析周期（用户未指定时默认 `mid`）
@@ -59,6 +60,7 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 - **B7【个人化】** 所有报告基于 `personal-profile.yaml` 算仓位、止损、成本；止损用 `risk.stop_loss_*`，不得用通用默认值。配置缺失时显著位置提示"未建个人档案，以下为通用假设"。
 - **B8【判断留痕】** weekly_pick / deep_dive 出结论后，**每个 A/B/C 档候选和每个"放弃/规避"判断**都必须写入预测日志：`prediction_log.py log ...`（放弃也要记——只记成功候选会产生幸存者偏差）。每个 A/B/C 档候选还要写入观察池：`watchlist.py add ...`。这是系统能验证自己、能改进的前提。
 - **B9【数据体检】** 阶段 1 之前必跑 `data_health.py`。任何被判"严重过期"（critical）的数据源 → 其相关结论必须在报告显式标注"基于滞后 N 天的数据，置信度降级"，**不得当作当期事实**；若信用周期/市场温度依赖的宏观数据严重过期，报告 A 段必须声明宏观判断置信度下调。值级失效数据（如北上资金恰为 0）不得作为资金面依据。
+- **B10【行为护栏】** 启动自检必跑 `behavior_check.py`；weekly_pick/deep_dive 阶段 5 必跑 `behavior_check.py --candidates <候选代码>`。**high 级行为告警必须在报告显式呈现并影响结论**：连续亏损冷静期 → 本轮不出 A 档、首选"只看不动"；追高/FOMO（候选贴近 52 周高点）→ 该候选降一档并把追高写入反对理由；反复改主意（此前判过放弃又推荐）→ 必须说清出现了什么新的实质变化，否则降档；亏损加仓 → 仅在原始逻辑未变时允许且必须重算总仓位。行为护栏只提示不替你做决定，但 high 级告警不得隐藏。
 
 ### C 层 · 输出与质量规则
 

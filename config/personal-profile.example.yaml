@@ -52,6 +52,14 @@ costs:
   stamp_tax_rate: 0.0005     # 印花税（仅卖出收取）
   transfer_fee_rate: 0.00001 # 过户费（双向）
 
+# ── 反人性护栏阈值 ────────────────────────────────────
+# 散户亏钱主要亏在行为。这些阈值供 behavior_check.py 检测行为陷阱。
+behavior:
+  max_trades_per_month: 8       # 近 30 天交易笔数上限，超过=过度交易
+  cooling_off_loss_streak: 3    # 连续亏损 N 笔 → 进入冷静期（本轮只看不动）
+  min_holding_days: 10          # 单股最短持有期（中线），低于=持有期过短
+  flip_flop_lookback_days: 90   # "反复改主意"回看窗口：N 天内判过放弃又推荐 → 告警
+
 # ── 元信息 ────────────────────────────────────────────
 meta:
   owner: ""                  # 你的名字或代号

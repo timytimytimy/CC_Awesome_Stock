@@ -72,6 +72,18 @@ python scripts/screen_all_market.py --lens growth    --top 30
 四镜头：composite/value/growth/reversal；宏观联动 + 业绩预告领先信号自动生效（输出"宏观""业绩预告"列）。
 若该脚本运行失败，报告必须披露：候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py` 的主线行业代表公司筛选，不代表全 A 股穷尽扫描。
 
+## behavior_check.py（反人性护栏 · 行为陷阱检测）
+
+**用途**: 启动自检 + 阶段 5——检测行为陷阱（散户亏钱主因是行为不是分析）。
+
+```bash
+python scripts/behavior_check.py                              # 当前行为状态（交易日志）
+python scripts/behavior_check.py --candidates 603259.SH,600176.SH  # 候选股陷阱扫描
+```
+
+检测：过度交易、连续亏损冷静期、持有期过短（交易日志）；反复改主意、
+已在观察池、亏损加仓（候选股）。high 级告警必须在报告显式呈现并影响档位（约束 B10）。
+
 ## data_health.py（数据健康体检 · 飞行前检查）
 
 **用途**: 阶段 1 之前的飞行前检查——核对所有关键数据源的新鲜度。
