@@ -189,11 +189,29 @@ cd data && python scripts/screen_by_criteria.py --industry <code> --school <slug
 读取 `kb/playbooks/company-to-thesis.md` 和 `kb/taxonomy/industry-mapping.yaml`，
 输出候选池（≤ 8 只），每只附：龙头/次龙头/补涨/待确认 分类。
 
-若存在 `data/scripts/screen_all_market.py`，优先运行：
+若存在 `data/scripts/screen_all_market.py`，优先运行（**全市场扫描，weekly_pick 首选**）：
 
 ```bash
-cd data && python scripts/screen_all_market.py --top 30
+# --enrich 0 = 流动性闸门内全部增强评分（不做有损初筛，避免漏掉"未启动的好票"）
+# 首次跑约 30 分钟，结果按日缓存、崩溃自动续跑；同日再跑秒级返回
+cd data && python scripts/screen_all_market.py --enrich 0 --top 40 --lens composite
 ```
+
+**多镜头排序（强烈建议跑多个镜头）**：增强结果缓存后，切换 `--lens` 是秒级操作。
+按本轮市场状态和想找的机会类型，至少再跑 1-2 个镜头：
+
+```bash
+# 同一批缓存因子，换镜头重排——不重新增强，秒出
+cd data && python scripts/screen_all_market.py --lens value     --top 30   # 深度价值
+cd data && python scripts/screen_all_market.py --lens reversal  --top 30   # 困境反转
+cd data && python scripts/screen_all_market.py --lens growth    --top 30   # 趋势成长
+```
+
+镜头选择对接能力路由表：过热/衰退期优先看 `value`/`reversal`，复苏期优先 `growth`。
+不同镜头捞出的候选不同——这是为了不被单一动量综合分漏掉机会。
+
+`screen_all_market.py` 已内置宏观联动：阶段 1 的信用周期 + PPI 方向自动转成所属行业
+加减分（`kb/taxonomy/macro-industry-mapping.yaml`），输出表的"宏观"列即为该调整。
 
 若不存在该脚本，必须在报告中披露：
 
