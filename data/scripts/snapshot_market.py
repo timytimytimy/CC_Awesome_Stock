@@ -137,7 +137,11 @@ def main():
     # 3. 北上资金
     print("## 北上资金（近5日）\n")
     northbound = get_northbound_flow(5)
-    if northbound.get("error"):
+    if northbound.get("discontinued"):
+        print(f"- 北上净流入: [已停止披露] ❌ "
+              f"{northbound.get('note', '北向资金实时净额自 2024-08 起不再公布')}"
+              f" —— 不作为资金面判断依据\n")
+    elif northbound.get("error"):
         print(f"- 北上净流入: [数据获取失败] ⚠️ 降级\n")
     else:
         total = northbound.get("total_5d")
