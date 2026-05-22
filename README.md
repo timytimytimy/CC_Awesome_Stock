@@ -4,18 +4,50 @@
 
 ## 系统构成
 
-```
-知识库 (kb/)  +  数据层 (data/)  →  Skill (.claude/skills/a-stock-analyst/ 和 .agents/skills/a-stock-analyst/)
+```mermaid
+flowchart TB
+    CFG["⚙️ config/ 个人配置<br/>资金·风险·能力圈·禁区"]
+    KB["📚 kb/ 知识库<br/>流派·作者·实践者·案例·playbook·taxonomy"]
+    DATA["📊 data/ 数据层<br/>17 个脚本：宏观·行业·财报·政策·行情·业绩预告"]
+    JRN["📓 journal/ 交易日志·错题本"]
+
+    subgraph PIPE["🎯 a-stock-analyst Skill · 五阶段决策流"]
+        direction TB
+        S1["① 市场环境<br/>信用周期·温度·政策"]
+        S2["② 行业筛选<br/>低估改善·宏观联动"]
+        S3["③ 候选发现<br/>全市场扫描·四镜头·业绩预告"]
+        S4["④ 单股深度<br/>财报体检·视角对抗·六问"]
+        S5["⑤ 风险+结论<br/>仓位换算·分档"]
+        S1 --> S2 --> S3 --> S4 --> S5
+    end
+
+    MECH["🛡️ 三个横向机制（贯穿五阶段）<br/>数据可靠性闸门 ｜ 能力路由表 ｜ 反人性护栏"]
+
+    REP["📄 reports/ 决策报告"]
+    WL["👁️ watchlist/ 观察池"]
+    PL["📈 journal/predictions/ 预测日志"]
+
+    CFG & KB & DATA & JRN --> PIPE
+    MECH -.贯穿.- PIPE
+    PIPE --> REP & WL & PL
+    WL -. track 模式·盯触发 .-> S4
+    PL -. 命中率验证·让知识库可证伪 .-> KB
 ```
 
-- **config/**：你个人的配置——投资档案（资金/风险/仓位规则/禁区）和能力圈，是所有报告的根输入
-- **kb/**：蒸馏自多位优秀分析者的方法论知识库（schools/authors/playbooks/taxonomy）
-- **kb/retail-practitioners/**：贴近普通投资者的公开实践者档案，用于执行适配、ETF/基金替代、组合和心理承受力参考
-- **data/**：基于 akshare 的行情/宏观/行业/财报/政策 CLI 数据脚本
-- **journal/**：你自己的交易日志（trades/）和错题本（lessons/），权重最高
-- **backtest/**：量化回测
-- **.claude/skills/a-stock-analyst/**：Claude Code skill，五阶段决策辅助
-- **.agents/skills/a-stock-analyst/**：Codex/Agents skill，和 Claude 入口保持同一套分析规则
+**输入层**
+- **config/**：个人投资档案（资金/风险/仓位规则/禁区）和能力圈，所有报告的根输入
+- **kb/**：蒸馏自多位优秀分析者的方法论知识库——`schools/`（6流派）`authors/`（18作者）`retail-practitioners/`（11实践者）`cases/`（典型案例）`playbooks/` `taxonomy/`（含能力路由表、宏观-行业映射）
+- **data/**：基于 akshare 的数据层——`stock_data/`（数据模块）+ `scripts/`（17 个 CLI 脚本）
+- **journal/**：交易日志（`trades/`）、错题本（`lessons/`）、预测日志（`predictions/`）
+
+**决策流**
+- **.claude/skills/a-stock-analyst/** 和 **.agents/skills/a-stock-analyst/**：Claude / Codex 双入口，同一套五阶段分析规则
+
+**输出与闭环**
+- **reports/**：结构化决策报告 + 执行信号表
+- **watchlist/**：观察池——把一次性研究变成持续盯触发的活标的
+- **journal/predictions/**：预测日志——每个判断留痕、事后验证命中率，让知识库可证伪
+- **backtest/**：量化回测（骨架）
 
 ## 快速使用
 
