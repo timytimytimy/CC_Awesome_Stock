@@ -84,6 +84,20 @@ python scripts/behavior_check.py --candidates 603259.SH,600176.SH  # 候选股�
 检测：过度交易、连续亏损冷静期、持有期过短（交易日志）；反复改主意、
 已在观察池、亏损加仓（候选股）。high 级告警必须在报告显式呈现并影响档位（约束 B10）。
 
+## cninfo_query.py（巨潮资讯 · 官方法定披露源）
+
+**用途**: 阶段 4——财报/公告以官方原始源为准（里海取数纪律）。
+
+```bash
+python scripts/cninfo_query.py profile 600519.SH               # 公司概况（含上市日期）
+python scripts/cninfo_query.py disclosures 600519.SH --days 90 [--keyword 回购]
+python scripts/cninfo_query.py prospectus 688256.SH            # 招股说明书定位
+python scripts/cninfo_query.py risk 300769.SZ --days 180       # 监管类风险公告扫描
+```
+
+`risk` 发现问询函/关注函/处罚/立案 → 必须列入排雷和反对理由。`prospectus` 给出招股书
+cninfo 链接，对上市未满 10 年的候选股要用 WebFetch 通读原文。
+
 ## data_health.py（数据健康体检 · 飞行前检查）
 
 **用途**: 阶段 1 之前的飞行前检查——核对所有关键数据源的新鲜度。

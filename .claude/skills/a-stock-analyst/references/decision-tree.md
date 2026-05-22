@@ -334,11 +334,21 @@ cd data && python scripts/earnings_radar.py --negative --top 60 | grep <ticker�
 若该股有"预增/扭亏"，是支持论文的强力前瞻证据（写入 Evidence Table，标 [事实]）；
 若有"预减/首亏"，必须列入反对理由并提升风险扣分。无预告则说明无强制披露级变动。
 
-**数据源纪律**（里海 playbook §2「数据源与取数纪律」）：
-- `financial_check.py` 的关键数字（营收/净利/现金流/ROE）若与预期或多源矛盾，
-  用 WebFetch 回**巨潮资讯 cninfo（cninfo.com.cn）** 核对原始公告——东财/同花顺是转手版。
-- **候选股上市未满 10 年的，用 WebFetch 查阅其招股说明书**（cninfo 免费可得）：
-  招股书是信息最全的单一文件，理解年轻公司"创立逻辑+原始竞争位置"的最快路径。
+**数据源纪律**（里海 playbook §2 + `cninfo_query.py` 工具，官方原始源 = 巨潮资讯）：
+
+```bash
+# 1. 监管风险扫描（必做）——发现问询函/关注函/处罚/立案 → 列入排雷和反对理由
+cd data && python scripts/cninfo_query.py risk <ticker>
+
+# 2. 上市未满 10 年的候选股（必做）——定位招股说明书，再 WebFetch 通读原文
+cd data && python scripts/cninfo_query.py prospectus <ticker>
+
+# 3. 财报关键数字存疑时——找原始公告，WebFetch 核对原文（东财/同花顺是转手版）
+cd data && python scripts/cninfo_query.py disclosures <ticker> --days 90
+```
+
+- 招股书是理解年轻公司"创立逻辑 + 原始竞争位置"的最全单一文件——`prospectus` 给出
+  cninfo 链接后，必须用 WebFetch 实际打开通读，不能只看标题。
 - 券商研报只取**数据**做交叉验证，不取其评级/目标价/荐股观点。
 
 **严禁**只看 PE/ROE 当前快照就判断公司质量。必须用 `financial_check.py` 输出的：
