@@ -21,6 +21,7 @@ from stock_data.market import (
     get_northbound_flow,
 )
 from stock_data.macro import classify_credit_cycle, market_temperature
+from stock_data.data_freshness import looks_broken_zero
 
 
 def parse_args():
@@ -140,8 +141,13 @@ def main():
         print(f"- 北上净流入: [数据获取失败] ⚠️ 降级\n")
     else:
         total = northbound.get("total_5d")
-        direction = "净流入" if (total or 0) >= 0 else "净流出"
-        print(f"- 近5日 {direction}: **{abs(total or 0):.1f}** 亿元\n")
+        broken = looks_broken_zero(total, "北上资金近5日净额") if total is not None else None
+        if total is None or broken:
+            print(f"- 北上净流入: [数据失效] ❌ {broken or '无数据'}"
+                  f" —— 不作为资金面判断依据\n")
+        else:
+            direction = "净流入" if total >= 0 else "净流出"
+            print(f"- 近5日 {direction}: **{abs(total):.1f}** 亿元\n")
 
     # 4. 行业涨跌榜
     print("## 行业涨跌榜（近5日 Top 10）\n")

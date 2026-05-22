@@ -72,6 +72,17 @@ python scripts/screen_all_market.py --lens growth    --top 30
 四镜头：composite/value/growth/reversal；宏观联动 + 业绩预告领先信号自动生效（输出"宏观""业绩预告"列）。
 若该脚本运行失败，报告必须披露：候选池来自 `screen_sectors.py` + `industry-mapping.yaml` + `screen_by_criteria.py` 的主线行业代表公司筛选，不代表全 A 股穷尽扫描。
 
+## data_health.py（数据健康体检 · 飞行前检查）
+
+**用途**: 阶段 1 之前的飞行前检查——核对所有关键数据源的新鲜度。
+
+```bash
+python scripts/data_health.py
+```
+
+输出每个数据源的滞后天数和 ✅/⚠️/❌ 状态。"❌严重过期"的数据源相关结论必须降级，
+不得当作当期事实（2026-05 实测踩过坑：CPI 滞后 9 个月被当期使用）。
+
 ## earnings_radar.py（业绩预告雷达 · 领先信号）
 
 **用途**: 阶段 2/3，扫描当期业绩预告——A 股强制披露、字面意义前瞻的信号。

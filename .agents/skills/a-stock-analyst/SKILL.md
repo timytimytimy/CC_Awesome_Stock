@@ -58,6 +58,7 @@ journal/lessons/  >  kb/cases/  >  kb/playbooks/  >  kb/authors/  >  kb/schools/
 - **B6【仓位换算】** A/B/C 档候选必跑 `position_calc.py`，把仓位上限换算成具体股数 + 金额 + 止损价。买不起一手/低于 min_order_amount/超 max_single_stock_pct → 标注"不可执行"并给替代方案。
 - **B7【个人化】** 所有报告基于 `personal-profile.yaml` 算仓位、止损、成本；止损用 `risk.stop_loss_*`，不得用通用默认值。配置缺失时显著位置提示"未建个人档案，以下为通用假设"。
 - **B8【判断留痕】** weekly_pick / deep_dive 出结论后，**每个 A/B/C 档候选和每个"放弃/规避"判断**都必须写入预测日志：`prediction_log.py log ...`（放弃也要记——只记成功候选会产生幸存者偏差）。每个 A/B/C 档候选还要写入观察池：`watchlist.py add ...`。这是系统能验证自己、能改进的前提。
+- **B9【数据体检】** 阶段 1 之前必跑 `data_health.py`。任何被判"严重过期"（critical）的数据源 → 其相关结论必须在报告显式标注"基于滞后 N 天的数据，置信度降级"，**不得当作当期事实**；若信用周期/市场温度依赖的宏观数据严重过期，报告 A 段必须声明宏观判断置信度下调。值级失效数据（如北上资金恰为 0）不得作为资金面依据。
 
 ### C 层 · 输出与质量规则
 

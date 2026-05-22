@@ -110,6 +110,7 @@ cp journal/lessons/_template.md journal/lessons/YYYY-MM-DD-short-title.md
 - **选股漏斗**: `screen_all_market.py` 全市场扫描——纯流动性初筛（不漏未启动标的）+ 四镜头评分（value/growth/reversal/composite）+ 宏观联动加减分
 - **系统闭环**: `watchlist/`（观察池，研究→持续盯触发）+ `journal/predictions/`（预测日志，每个判断留痕、事后验证命中率），让知识库可证伪
 - **领先信号层**: 业绩预告雷达（`earnings_radar.py`，A股强制披露的前瞻信号）+ 信贷脉冲前瞻——让选股从"猎捕当前状态"转向"猎捕正在变好"
+- **数据可靠性闸门**: `data_health.py` 飞行前体检 + 各数据点新鲜度标签——过期/失效数据显式告警并降级，不在陈旧数据上做决策
 - **真实数据分析层**: 宏观、行业基本面、公司财报、政策事件四条数据流
 - **个人化基础层**: 个人投资档案、能力圈、仓位换算、交易日志汇总、错题本
 - **数据脚本** (12个): snapshot_market / snapshot_macro / snapshot_industry / snapshot_stock / screen_all_market / screen_sectors / screen_by_criteria / financial_check / policy_track / position_calc / journal_summary / find_similar_cases

@@ -18,6 +18,7 @@ from stock_data.macro import (
     get_treasury_yields, get_credit_pulse, get_fed_rate,
     classify_credit_cycle, market_temperature,
 )
+from stock_data.data_freshness import freshness_tag, assess_freshness
 
 
 def _trend_arrow(series_recent, lookback: int = 3) -> str:
@@ -43,8 +44,9 @@ def main():
         chg = latest_m["manufacturing"] - prev_m["manufacturing"]
         status = "扩张" if latest_m["manufacturing"] >= 50 else "收缩"
         trend = _trend_arrow(pmi["manufacturing"])
+        tag = freshness_tag("macro_monthly", latest_m["date"])
         print(f"- **PMI 制造业**: {latest_m['manufacturing']:.1f} ({latest_m['date'].strftime('%Y-%m')})"
-              f" | 环比 {chg:+.1f} | 趋势 {trend} | 状态：**{status}**（荣枯线 50）")
+              f" | 环比 {chg:+.1f} | 趋势 {trend} | 状态：**{status}**（荣枯线 50） | {tag}")
         if not pmi.empty:
             print(f"  - 近 6 期: {' → '.join(f'{x:.1f}' for x in pmi['manufacturing'])}")
 
@@ -52,16 +54,20 @@ def main():
         latest_p = ppi.iloc[-1]
         trend = _trend_arrow(ppi["ppi_yoy"])
         sig = "通胀" if latest_p["ppi_yoy"] > 0 else "通缩"
+        tag = freshness_tag("macro_monthly", latest_p["date"])
         print(f"- **PPI 同比**: {latest_p['ppi_yoy']:+.2f}% ({latest_p['date'].strftime('%Y-%m')})"
-              f" | 趋势 {trend} | 信号：**{sig}**")
+              f" | 趋势 {trend} | 信号：**{sig}** | {tag}")
         print(f"  - 近 6 期: {' → '.join(f'{x:+.2f}%' for x in ppi['ppi_yoy'])}")
 
     if not cpi.empty:
         latest_c = cpi.iloc[-1]
         trend = _trend_arrow(cpi["cpi_yoy"])
+        tag = freshness_tag("macro_monthly", latest_c["date"])
         print(f"- **CPI 同比**: {latest_c['cpi_yoy']:+.2f}% ({latest_c['date'].strftime('%Y-%m')})"
-              f" | 趋势 {trend}")
+              f" | 趋势 {trend} | {tag}")
         print(f"  - 近 6 期: {' → '.join(f'{x:+.2f}%' for x in cpi['cpi_yoy'])}")
+        if assess_freshness("macro_monthly", latest_c["date"])["status"] == "critical":
+            print(f"  - ❌ **CPI 数据严重过期**，本期 CPI 不可作为当期通胀判断依据")
     print()
 
     # ── 2. 流动性 ─────────────────────────────────────
@@ -73,20 +79,23 @@ def main():
     if not m2.empty:
         latest = m2.iloc[-1]
         trend = _trend_arrow(m2["m2_yoy"])
-        print(f"- **M2 同比**: {latest['m2_yoy']:+.2f}% ({latest['date'].strftime('%Y-%m')}) | 趋势 {trend}")
+        tag = freshness_tag("macro_monthly", latest["date"])
+        print(f"- **M2 同比**: {latest['m2_yoy']:+.2f}% ({latest['date'].strftime('%Y-%m')}) | 趋势 {trend} | {tag}")
 
     if not sf.empty:
         latest = sf.iloc[-1]
+        tag = freshness_tag("macro_monthly", latest["date"])
         print(f"- **社融最新月**: {latest['social_financing']:.0f} 亿（{latest['date'].strftime('%Y-%m')}）"
-              f" | 含人民币贷款 {latest['rmb_loan']:.0f} 亿")
+              f" | 含人民币贷款 {latest['rmb_loan']:.0f} 亿 | {tag}")
         print(f"  - 近 6 月社融: {' → '.join(f'{x:.0f}' for x in sf['social_financing'].tail(6))} (亿)")
 
     if not pulse.empty:
         latest_pulse = pulse.iloc[-1]
         trend = _trend_arrow(pulse["credit_pulse"])
         sig = "信用扩张加速" if latest_pulse["credit_pulse"] > 0 else "信用收缩"
+        tag = freshness_tag("macro_monthly", latest_pulse["date"])
         print(f"- **信贷脉冲**（高善文领先指标）: {latest_pulse['credit_pulse']:+.2f}% "
-              f"({latest_pulse['date'].strftime('%Y-%m')}) | 趋势 {trend} | 信号：**{sig}**")
+              f"({latest_pulse['date'].strftime('%Y-%m')}) | 趋势 {trend} | 信号：**{sig}** | {tag}")
         print(f"  - 近 6 期: {' → '.join(f'{x:+.2f}%' for x in pulse['credit_pulse'].tail(6))}")
         print(f"  - [推断] 信贷脉冲领先权益市场约 6-9 个月，是判断牛熊拐点的核心指标")
     print()
@@ -99,8 +108,9 @@ def main():
     if not ty.empty:
         latest = ty.iloc[-1]
         cn10y_pct = (ty["cn_10y"] < latest["cn_10y"]).mean() * 100
+        tag = freshness_tag("market_daily", latest["date"])
         print(f"- **中国10年国债**: {latest['cn_10y']:.4f}% ({latest['date'].strftime('%Y-%m-%d')})"
-              f" | 近 1 年分位 {cn10y_pct:.1f}%（低分位=流动性宽松）")
+              f" | 近 1 年分位 {cn10y_pct:.1f}%（低分位=流动性宽松） | {tag}")
         print(f"- **中国 10Y-2Y 利差**: {latest['cn_10y_2y_spread']:+.4f}%"
               f" | {'倒挂' if latest['cn_10y_2y_spread'] < 0 else '正常' if latest['cn_10y_2y_spread'] > 0.3 else '偏平'}")
         # 中美利差取最近一个非 nan（美国数据有 1-2 天滞后）

@@ -59,6 +59,9 @@ test -f "$SKILL_REF_DIR/subagent-protocol.md" && sed -n '1,220p' "$SKILL_REF_DIR
 **强制步骤（顺序不可变）：**
 
 ```bash
+# 0. 数据健康体检（飞行前检查 — 必须最先跑）
+cd data && python scripts/data_health.py
+
 # 1. 宏观面板（必须先读 — 信用周期 + 市场温度计）
 cd data && python scripts/snapshot_macro.py
 
@@ -68,6 +71,12 @@ cd data && python scripts/policy_track.py
 # 3. 大盘技术面板（已集成宏观摘要）
 cd data && python scripts/snapshot_market.py
 ```
+
+**数据体检处理（约束 B9）**：先看 `data_health.py` 结论——
+- 任何"❌ 严重过期"的数据源，其相关结论必须降级：报告里显式写"基于滞后 N 天数据"。
+- 若 CPI/M2/社融/信贷脉冲等严重过期 → 报告 A 段必须声明"宏观判断置信度下调（关键数据滞后）"。
+- 北上资金等"数据失效"项不得作为资金面依据。
+- 不要把过期数据当成当期事实——这是 2026-05 实测踩过的坑（CPI 滞后 9 个月被当期使用）。
 
 **严禁**只看价格涨跌就下市场判断。必须先用 `snapshot_macro.py` 输出的：
 - **信用周期阶段**（高善文框架：复苏 / 过热 / 滞胀 / 衰退）
